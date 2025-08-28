@@ -1,9 +1,71 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
+import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
+
+const OutletSelector: React.FC = () => {
+  const { outlets, selectedOutlet, setSelectedOutlet } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!selectedOutlet || outlets.length <= 1) {
+      return (
+        <div className="w-full flex items-center space-x-3 p-3 rounded-md bg-slate-100">
+            <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600 flex-shrink-0" />
+            <div className="min-w-0">
+                <p className="text-xs text-slate-500">Current Outlet</p>
+                <p className="font-semibold text-sm text-secondary truncate" title={selectedOutlet?.name}>{selectedOutlet?.name}</p>
+            </div>
+        </div>
+      );
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="w-full flex items-center justify-between space-x-2 p-3 rounded-md bg-slate-100 hover:bg-slate-200 transition-colors"
+      >
+        <div className="flex items-center space-x-3 min-w-0">
+            <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600 flex-shrink-0" />
+            <div className="text-left min-w-0">
+                <p className="text-xs text-slate-500">Current Outlet</p>
+                <p className="font-semibold text-sm text-secondary truncate" title={selectedOutlet.name}>{selectedOutlet.name}</p>
+            </div>
+        </div>
+        <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-slate-200 z-20">
+          <div className="p-2">
+            <p className="px-2 py-1 text-xs font-semibold text-slate-500 uppercase">Select Outlet</p>
+            {outlets.map(outlet => (
+              <button 
+                key={outlet.id} 
+                onClick={() => { setSelectedOutlet(outlet); setIsOpen(false); }} 
+                className={`w-full text-left px-2 py-2 text-sm text-slate-700 rounded-md ${selectedOutlet.id === outlet.id ? 'bg-primary-50 font-semibold text-primary-700' : 'hover:bg-slate-100'}`}
+              >
+                {outlet.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface SidebarProps {
   isOpen: boolean;
@@ -83,6 +145,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <div className="flex items-center justify-center h-20 border-b border-slate-200 flex-shrink-0">
           <h1 className="text-2xl font-bold text-primary">Halfplate</h1>
         </div>
+
+        <div className="p-4 border-b border-slate-200">
+          <OutletSelector />
+        </div>
+
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {links.map(link => (
             <NavLink 
