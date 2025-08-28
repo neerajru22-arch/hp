@@ -229,9 +229,13 @@ const TableNode: React.FC<{ table: Table; onEdit: () => void; onDelete: () => vo
             <span className="font-medium text-slate-700">{table.name}</span>
             <span className="text-sm text-slate-500 ml-2">(Cap: {table.capacity})</span>
         </div>
-        <div className="flex space-x-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button size="sm" variant="secondary" className="p-1 h-6 w-6" onClick={onEdit}><PencilIcon className="w-3 h-3" /></Button>
-            <Button size="sm" variant="danger" className="p-1 h-6 w-6" onClick={onDelete}><TrashIcon className="w-3 h-3" /></Button>
+        <div className="flex items-center space-x-1">
+            <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors md:opacity-0 group-hover:opacity-100">
+                <PencilIcon className="w-4 h-4" />
+            </button>
+            <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors md:opacity-0 group-hover:opacity-100">
+                <TrashIcon className="w-4 h-4" />
+            </button>
         </div>
     </div>
 );
@@ -262,15 +266,23 @@ const FloorNode: React.FC<{ floor: Floor; onSave: () => void }> = ({ floor, onSa
 
     return (
         <div className="ml-4 pl-4 border-l border-slate-200">
-            <div className="flex items-center justify-between group py-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between group py-1">
                 <div className="flex items-center cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                     <ChevronRightIcon className={`w-5 h-5 text-slate-500 mr-1 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                     <span className="font-semibold text-slate-800">{floor.name}</span>
                 </div>
-                <div className="flex space-x-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="sm" variant="secondary" className="p-1 h-6 w-6" onClick={() => setModal({ type: 'edit-floor', data: floor })}><PencilIcon className="w-3 h-3" /></Button>
-                    <Button size="sm" variant="danger" className="p-1 h-6 w-6" onClick={handleDeleteFloor}><TrashIcon className="w-3 h-3" /></Button>
-                    <Button size="sm" onClick={() => setModal({ type: 'add-table', data: null })} leftIcon={<PlusIcon className="w-3 h-3" />}>Table</Button>
+                <div className="w-full sm:w-auto flex items-center space-x-2 mt-2 sm:mt-0 sm:ml-4">
+                    <div className="flex-grow sm:flex-grow-0 flex items-center space-x-1">
+                        <button onClick={() => setModal({ type: 'edit-floor', data: floor })} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors md:opacity-0 group-hover:opacity-100">
+                            <PencilIcon className="w-4 h-4" />
+                        </button>
+                        <button onClick={handleDeleteFloor} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors md:opacity-0 group-hover:opacity-100">
+                            <TrashIcon className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <Button size="sm" className="w-full sm:w-auto" onClick={() => setModal({ type: 'add-table', data: null })} leftIcon={<PlusIcon className="w-3 h-3" />}>
+                        Add Table
+                    </Button>
                 </div>
             </div>
             {isOpen && (
@@ -310,21 +322,25 @@ const OutletNode: React.FC<{ outlet: Outlet }> = ({ outlet }) => {
             
             {/* Kitchens */}
             <div className="py-2">
-                <div className="flex items-center justify-between group cursor-pointer" onClick={() => setOpenSections(p => ({...p, kitchens: !p.kitchens}))}>
-                    <div className="flex items-center">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between group">
+                    <div className="flex items-center cursor-pointer mb-2 sm:mb-0" onClick={() => setOpenSections(p => ({...p, kitchens: !p.kitchens}))}>
                         <ChevronRightIcon className={`w-5 h-5 text-slate-500 mr-1 transition-transform ${openSections.kitchens ? 'rotate-90' : ''}`} />
                         <h4 className="text-lg font-semibold text-secondary">Kitchens</h4>
                     </div>
-                    <Button size="sm" onClick={(e) => { e.stopPropagation(); setModal({ type: 'kitchen-add', data: null }); }} leftIcon={<PlusIcon className="w-4 h-4" />}>Add Kitchen</Button>
+                    <Button size="sm" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); setModal({ type: 'kitchen-add', data: null }); }} leftIcon={<PlusIcon className="w-4 h-4" />}>Add Kitchen</Button>
                 </div>
                 {openSections.kitchens && (
                     <div className="ml-4 pl-4 border-l border-slate-200 mt-2 space-y-1">
                         {kitchens?.map(kitchen => (
                             <div key={kitchen.id} className="flex items-center justify-between group py-1 px-2 rounded hover:bg-slate-100">
                                 <span className="text-slate-700">{kitchen.name}</span>
-                                <div className="flex space-x-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button size="sm" variant="secondary" className="p-1 h-6 w-6" onClick={() => setModal({ type: 'kitchen-edit', data: kitchen })}><PencilIcon className="w-3 h-3" /></Button>
-                                    <Button size="sm" variant="danger" className="p-1 h-6 w-6" onClick={() => handleDeleteKitchen(kitchen.id)}><TrashIcon className="w-3 h-3" /></Button>
+                                <div className="flex items-center space-x-1">
+                                    <button onClick={() => setModal({ type: 'kitchen-edit', data: kitchen })} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors md:opacity-0 group-hover:opacity-100">
+                                        <PencilIcon className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDeleteKitchen(kitchen.id)} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors md:opacity-0 group-hover:opacity-100">
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -335,12 +351,12 @@ const OutletNode: React.FC<{ outlet: Outlet }> = ({ outlet }) => {
 
             {/* Floors */}
             <div className="py-2">
-                <div className="flex items-center justify-between group cursor-pointer" onClick={() => setOpenSections(p => ({...p, floors: !p.floors}))}>
-                    <div className="flex items-center">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between group">
+                     <div className="flex items-center cursor-pointer mb-2 sm:mb-0" onClick={() => setOpenSections(p => ({...p, floors: !p.floors}))}>
                          <ChevronRightIcon className={`w-5 h-5 text-slate-500 mr-1 transition-transform ${openSections.floors ? 'rotate-90' : ''}`} />
                         <h4 className="text-lg font-semibold text-secondary">Floors & Tables</h4>
                     </div>
-                    <Button size="sm" onClick={(e) => { e.stopPropagation(); setModal({ type: 'floor-add', data: null }); }} leftIcon={<PlusIcon className="w-4 h-4" />}>Add Floor</Button>
+                    <Button size="sm" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); setModal({ type: 'floor-add', data: null }); }} leftIcon={<PlusIcon className="w-4 h-4" />}>Add Floor</Button>
                 </div>
                 {openSections.floors && (
                     <div className="mt-2 space-y-2">
