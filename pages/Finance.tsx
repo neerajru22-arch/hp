@@ -52,7 +52,7 @@ const Finance: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <h2 className="text-xl font-semibold text-secondary">AP Automation for {selectedOutlet.name}</h2>
         <Button onClick={() => alert('Exporting data to Tally/Zoho/QuickBooks...')}>
           Export to Tally/Zoho

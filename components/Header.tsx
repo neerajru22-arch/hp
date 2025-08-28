@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDownIcon, BellIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon } from './icons/Icons';
+import { ChevronDownIcon, BellIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, Bars3Icon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { Outlet, InventoryItem } from '../types';
 import { api } from '../services/api';
@@ -52,8 +52,11 @@ const OutletSelector: React.FC = () => {
   );
 }
 
+interface HeaderProps {
+  onMenuClick: () => void;
+}
 
-const Header: React.FC = () => {
+const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { user, outlets, logout } = useAuth();
@@ -101,12 +104,19 @@ const Header: React.FC = () => {
   if (!user) return null;
 
   return (
-    <header className="flex items-center justify-between h-20 px-6 md:px-8 bg-white border-b border-slate-200">
-      <div className="flex items-center space-x-4">
-        <h2 className="text-2xl font-bold text-secondary">{getPageTitle()}</h2>
-        <OutletSelector />
+    <header className="flex items-center justify-between h-20 px-4 md:px-8 bg-white border-b border-slate-200 flex-shrink-0">
+      <div className="flex items-center space-x-2">
+        <button onClick={onMenuClick} className="md:hidden p-2 -ml-2 text-slate-600 hover:text-primary">
+          <Bars3Icon className="w-6 h-6" />
+        </button>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl md:text-2xl font-bold text-secondary">{getPageTitle()}</h2>
+          <div className="hidden md:block">
+            <OutletSelector />
+          </div>
+        </div>
       </div>
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-3 md:space-x-6">
         <div className="relative" ref={notificationsRef}>
           <button onClick={() => setNotificationsOpen(prev => !prev)} className="relative text-slate-600 hover:text-primary">
             <BellIcon className="w-6 h-6" />

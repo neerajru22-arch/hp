@@ -17,12 +17,14 @@ import Staff from './pages/Staff';
 import Vendors from './pages/Vendors';
 
 const AppLayout: React.FC = () => {
+  const [isSidebarOpen, setSidebarOpen] = React.useState(false);
+
   return (
     <div className="flex h-screen bg-slate-100 text-slate-800">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-6 md:p-8">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-4 sm:p-6 md:p-8">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />

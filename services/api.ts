@@ -1,15 +1,14 @@
-
 import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType } from '../types';
 
 // --- MOCK DATABASE ---
 
-const mockUsers: User[] = [
-  { id: 'user-1', name: 'Ana Johnson', email: 'owner@halfplate.com', role: UserRole.RestaurantOwner, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'] },
-  { id: 'user-2', name: 'System Admin', email: 'admin@halfplate.com', role: UserRole.Admin, outletIds: ['outlet-1', 'outlet-2', 'outlet-3', 'outlet-4', 'hq-1'] },
-  { id: 'user-3', name: 'Marco Pierre', email: 'chef@halfplate.com', role: UserRole.Chef, outletIds: ['outlet-1'] },
-  { id: 'user-4', name: 'Sam Carter', email: 'store.manager@halfplate.com', role: UserRole.StoreManager, outletIds: ['outlet-1', 'outlet-2'] },
-  { id: 'user-5', name: 'Penny Lane', email: 'procurement@halfplate.com', role: UserRole.Procurement, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'] },
-  { id: 'user-6', name: 'Chris P. Bacon', email: 'waiter@halfplate.com', role: UserRole.Waiter, outletIds: ['outlet-1'] },
+let mockUsers: User[] = [
+  { id: 'user-1', name: 'Ana Johnson', email: 'owner@halfplate.com', role: UserRole.RestaurantOwner, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Overall P&L', 'Expansion Strategy'] },
+  { id: 'user-2', name: 'System Admin', email: 'admin@halfplate.com', role: UserRole.Admin, outletIds: ['outlet-1', 'outlet-2', 'outlet-3', 'outlet-4', 'hq-1'], kras: ['System Uptime', 'User Management'] },
+  { id: 'user-3', name: 'Marco Pierre', email: 'chef@halfplate.com', role: UserRole.Chef, outletIds: ['outlet-1'], kras: ['Menu Innovation', 'Kitchen Food Cost'] },
+  { id: 'user-4', name: 'Sam Carter', email: 'store.manager@halfplate.com', role: UserRole.StoreManager, outletIds: ['outlet-1', 'outlet-2'], kras: ['Inventory Accuracy', 'Stock Rotation'] },
+  { id: 'user-5', name: 'Penny Lane', email: 'procurement@halfplate.com', role: UserRole.Procurement, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Vendor Negotiation', 'Purchase Order Accuracy'] },
+  { id: 'user-6', name: 'Chris P. Bacon', email: 'waiter@halfplate.com', role: UserRole.Waiter, outletIds: ['outlet-1'], kras: ['Guest Satisfaction', 'Upselling'] },
 ];
 
 let mockVendors: Vendor[] = [
@@ -194,15 +193,57 @@ export const api = {
     getKitchens: (outletId: string) => simulateApiCall(mockKitchens.filter(k => k.outletId === outletId)),
     getFloors: (outletId: string) => simulateApiCall(mockFloors.filter(f => f.outletId === outletId)),
     getTablesForFloor: (floorId: string) => simulateApiCall(mockTables.filter(t => t.floorId === floorId)),
+    addKitchenToOutlet: (name: string, outletId: string) => {
+        const newKitchen: Kitchen = { id: `kit-${Date.now()}`, name, outletId };
+        mockKitchens.push(newKitchen);
+        return simulateApiCall(newKitchen);
+    },
+    updateKitchen: (kitchen: Kitchen) => {
+        const index = mockKitchens.findIndex(k => k.id === kitchen.id);
+        if (index > -1) {
+            mockKitchens[index] = kitchen;
+            return simulateApiCall(kitchen);
+        }
+        return Promise.reject(new Error("Kitchen not found"));
+    },
+    deleteKitchen: (kitchenId: string) => {
+        mockKitchens = mockKitchens.filter(k => k.id !== kitchenId);
+        return simulateApiCall({ success: true });
+    },
     addFloorToOutlet: (name: string, outletId: string) => {
         const newFloor: Floor = { id: `floor-${Date.now()}`, name, outletId };
         mockFloors.push(newFloor);
         return simulateApiCall(newFloor);
     },
+    updateFloor: (floor: Floor) => {
+        const index = mockFloors.findIndex(f => f.id === floor.id);
+        if (index > -1) {
+            mockFloors[index] = floor;
+            return simulateApiCall(floor);
+        }
+        return Promise.reject(new Error("Floor not found"));
+    },
+    deleteFloor: (floorId: string) => {
+        mockFloors = mockFloors.filter(f => f.id !== floorId);
+        mockTables = mockTables.filter(t => t.floorId !== floorId); // Also delete tables on this floor
+        return simulateApiCall({ success: true });
+    },
     addTableToFloor: (name: string, capacity: number, floorId: string, assignedWaiterId: string) => {
         const newTable: Table = { id: `t-${Date.now()}`, name, capacity, floorId, assignedWaiterId, status: TableStatus.Available, seatedAt: null };
         mockTables.push(newTable);
         return simulateApiCall(newTable);
+    },
+    updateTable: (table: Table) => {
+        const index = mockTables.findIndex(t => t.id === table.id);
+        if (index > -1) {
+            mockTables[index] = table;
+            return simulateApiCall(table);
+        }
+        return Promise.reject(new Error("Table not found"));
+    },
+    deleteTable: (tableId: string) => {
+        mockTables = mockTables.filter(t => t.id !== tableId);
+        return simulateApiCall({ success: true });
     },
     getOrders: (outletId: string) => simulateApiCall(mockOrders.filter(o => o.outletId === outletId)),
     getInventory: (outletId: string) => simulateApiCall(mockInventory.filter(i => i.outletId === outletId)),
@@ -371,5 +412,28 @@ export const api = {
             return simulateApiCall(kot);
         }
         return Promise.reject(new Error("KOT or KOT item not found"));
+    },
+    // User Management APIs
+    getAllUsers: () => simulateApiCall(mockUsers),
+    addUser: (user: Omit<User, 'id'>) => {
+        const newUser: User = { ...user, id: `user-${Date.now()}` };
+        mockUsers.push(newUser);
+        return simulateApiCall(newUser);
+    },
+    updateUser: (user: User) => {
+        const index = mockUsers.findIndex(u => u.id === user.id);
+        if (index > -1) {
+            mockUsers[index] = user;
+            return simulateApiCall(user);
+        }
+        return Promise.reject(new Error("User not found"));
+    },
+    deleteUser: (userId: string) => {
+        const initialLength = mockUsers.length;
+        mockUsers = mockUsers.filter(u => u.id !== userId);
+        if (mockUsers.length < initialLength) {
+            return simulateApiCall({ success: true });
+        }
+        return Promise.reject(new Error("User not found"));
     },
 };

@@ -635,9 +635,9 @@ const ChefDashboard: React.FC = () => {
     if (error) return <div className="text-center p-8 text-danger">Failed to load kitchen orders.</div>;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 h-full">
+        <div className="flex h-full space-x-4 overflow-x-auto pb-4">
             {/* Takeaway Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col">
+            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                 <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-primary pb-2">Takeaway ({takeawayKots.length})</h3>
                 <div className="flex-grow overflow-y-auto">
                     {takeawayKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
@@ -645,7 +645,7 @@ const ChefDashboard: React.FC = () => {
                 </div>
             </div>
             {/* New Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col">
+            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                 <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({newKots.length})</h3>
                 <div className="flex-grow overflow-y-auto">
                     {newKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
@@ -653,7 +653,7 @@ const ChefDashboard: React.FC = () => {
                 </div>
             </div>
             {/* Preparing Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col">
+            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                 <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({preparingKots.length})</h3>
                 <div className="flex-grow overflow-y-auto">
                     {preparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
@@ -661,7 +661,7 @@ const ChefDashboard: React.FC = () => {
                 </div>
             </div>
             {/* Ready Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col">
+            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                 <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-green-500 pb-2">Ready for Pickup ({readyKots.length})</h3>
                  <div className="flex-grow overflow-y-auto">
                     {readyKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}

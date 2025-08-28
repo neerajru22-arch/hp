@@ -22,6 +22,7 @@ export interface User {
   email: string;
   role: UserRole;
   outletIds: string[];
+  kras?: string[];
 }
 
 export interface Outlet {

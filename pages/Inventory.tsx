@@ -71,7 +71,7 @@ const Inventory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <h2 className="text-xl font-semibold text-secondary">Inventory for {selectedOutlet.name}</h2>
         <Button onClick={() => alert('Simulating goods received note...')} leftIcon={<PlusIcon className="w-5 h-5"/>}>
           Receive Goods

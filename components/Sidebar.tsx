@@ -5,7 +5,12 @@ import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, Banknotes
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const { user } = useAuth();
   
   const navLinkClasses = 'flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors';
@@ -58,30 +63,52 @@ const Sidebar: React.FC = () => {
 
   const links = user ? roleLinks[user.role] || commonLinks : [];
 
+  const sidebarClasses = `
+    flex flex-col w-64 bg-white border-r border-slate-200
+    fixed inset-y-0 left-0 z-40
+    transform transition-transform duration-300 ease-in-out
+    md:static md:translate-x-0
+    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+  `;
+
   return (
-    <div className="flex flex-col w-64 bg-white border-r border-slate-200">
-      <div className="flex items-center justify-center h-20 border-b border-slate-200">
-        <h1 className="text-2xl font-bold text-primary">Halfplate</h1>
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
+      <div className={sidebarClasses}>
+        <div className="flex items-center justify-center h-20 border-b border-slate-200 flex-shrink-0">
+          <h1 className="text-2xl font-bold text-primary">Halfplate</h1>
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          {links.map(link => (
+            <NavLink 
+              key={link.to} 
+              to={link.to} 
+              className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}
+              onClick={() => setIsOpen(false)} // Close sidebar on link click
+            >
+              <link.icon className="w-6 h-6 mr-3" />
+              {link.text}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="px-4 py-6 border-t border-slate-200 space-y-2">
+          <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
+              <Cog6ToothIcon className="w-6 h-6 mr-3" />
+              Settings
+          </a>
+          <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
+              <QuestionMarkCircleIcon className="w-6 h-6 mr-3" />
+              Support
+          </a>
+        </div>
       </div>
-      <nav className="flex-1 px-4 py-6 space-y-2">
-        {links.map(link => (
-          <NavLink key={link.to} to={link.to} className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}>
-            <link.icon className="w-6 h-6 mr-3" />
-            {link.text}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="px-4 py-6 border-t border-slate-200 space-y-2">
-        <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
-            <Cog6ToothIcon className="w-6 h-6 mr-3" />
-            Settings
-        </a>
-        <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
-            <QuestionMarkCircleIcon className="w-6 h-6 mr-3" />
-            Support
-        </a>
-      </div>
-    </div>
+    </>
   );
 };
 
