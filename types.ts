@@ -154,6 +154,14 @@ export enum VendorPerformance {
     Poor = 'Poor'
 }
 
+export interface VendorItem {
+    id: string;
+    name: string;
+    sku: string;
+    price: number;
+    unit: string;
+}
+
 export interface Vendor {
     id: string;
     name: string;
@@ -162,6 +170,10 @@ export interface Vendor {
     phone: string;
     status: VendorStatus;
     performanceRating: VendorPerformance;
+    vendorCode?: string;
+    isLinked?: boolean;
+    specialty?: string;
+    items?: VendorItem[];
 }
 
 export enum TableStatus {
@@ -193,6 +205,7 @@ export interface Table {
     assignedWaiterId: string;
     seatedAt: number | null; // Timestamp when customers were seated
     floorId: string;
+    clubId?: string;
 }
 
 export interface MenuItem {
@@ -215,7 +228,7 @@ export interface CustomerOrderItem {
 
 export interface CustomerOrder {
     id: string;
-    tableId: string;
+    tableId: string; // Could be a single tableId or a clubId
     waiterId: string;
     items: CustomerOrderItem[];
     total: number;

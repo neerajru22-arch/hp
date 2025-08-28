@@ -1,5 +1,5 @@
 
-import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient, CustomerOrderItemStatus, MenuEngineeringCategory, MenuEngineeringItem, WastageEntry, ActivityLogEntry, WastageReason } from '../types';
+import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient, CustomerOrderItemStatus, MenuEngineeringCategory, MenuEngineeringItem, WastageEntry, ActivityLogEntry, WastageReason, VendorItem } from '../types';
 
 // --- MOCK DATABASE ---
 
@@ -14,10 +14,36 @@ let mockUsers: User[] = [
 ];
 
 let mockVendors: Vendor[] = [
-    { id: 'ven-1', name: 'Sabzi Mandi Suppliers', contactPerson: 'Vikram Patel', email: 'vikram@sabzisuppliers.in', phone: '+91 98765 43210', status: VendorStatus.Active, performanceRating: VendorPerformance.Excellent },
-    { id: 'ven-2', name: 'Quality Meats Delhi', contactPerson: 'Aisha Khan', email: 'aisha@qualitymeats.in', phone: '+91 98765 43211', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
-    { id: 'ven-3', name: 'Amul Dairy Distributors', contactPerson: 'Rohan Mehta', email: 'rohan@amuldist.in', phone: '+91 98765 43212', status: VendorStatus.Inactive, performanceRating: VendorPerformance.Average },
-    { id: 'ven-4', name: 'Modern Bakery Mumbai', contactPerson: 'Sunita Rao', email: 'sunita@modernbakery.in', phone: '+91 98765 43213', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
+    { 
+        id: 'ven-1', name: 'Sabzi Mandi Suppliers', contactPerson: 'Vikram Patel', email: 'vikram@sabzisuppliers.in', phone: '+91 98765 43210', status: VendorStatus.Active, performanceRating: VendorPerformance.Excellent,
+        vendorCode: 'SABZI-123', isLinked: true, specialty: 'Fresh Vegetables',
+        items: [
+            { id: 'i-1', name: 'Tomatoes', sku: 'VEG-TOM', price: 40, unit: 'kg' },
+            { id: 'i-2', name: 'Onions', sku: 'VEG-ONI', price: 30, unit: 'kg' },
+            { id: 'i-3', name: 'Potatoes', sku: 'VEG-POT', price: 25, unit: 'kg' },
+        ]
+    },
+    { 
+        id: 'ven-2', name: 'Quality Meats Delhi', contactPerson: 'Aisha Khan', email: 'aisha@qualitymeats.in', phone: '+91 98765 43211', status: VendorStatus.Active, performanceRating: VendorPerformance.Good,
+        vendorCode: 'QMD-456', isLinked: true, specialty: 'Poultry and Meat',
+        items: [
+            { id: 'i-4', name: 'Chicken Breast', sku: 'MEA-CHB', price: 350, unit: 'kg' },
+            { id: 'i-5', name: 'Mutton Curry Cut', sku: 'MEA-MCC', price: 700, unit: 'kg' },
+        ]
+    },
+    { 
+        id: 'ven-3', name: 'Amul Dairy Distributors', contactPerson: 'Rohan Mehta', email: 'rohan@amuldist.in', phone: '+91 98765 43212', status: VendorStatus.Inactive, performanceRating: VendorPerformance.Average,
+        vendorCode: 'AMUL-789', isLinked: false, specialty: 'Dairy Products',
+        items: [
+            { id: 'i-6', name: 'Paneer', sku: 'DAI-PAN', price: 320, unit: 'kg' },
+            { id: 'i-7', name: 'Amul Milk', sku: 'DAI-MIL', price: 60, unit: 'L' },
+        ]
+    },
+    { 
+        id: 'ven-4', name: 'Modern Bakery Mumbai', contactPerson: 'Sunita Rao', email: 'sunita@modernbakery.in', phone: '+91 98765 43213', status: VendorStatus.Active, performanceRating: VendorPerformance.Good,
+        vendorCode: 'MBM-101', isLinked: false, specialty: 'Bakery Goods',
+        items: []
+    },
 ];
 
 const mockOutlets: Outlet[] = [
@@ -397,6 +423,25 @@ export const api = {
         }
         return Promise.reject(new Error("Vendor not found"));
     },
+    linkVendorByCode: (code: string) => {
+        const vendor = mockVendors.find(v => v.vendorCode === code);
+        if (vendor) {
+            return simulateApiCall(vendor);
+        }
+        return Promise.reject(new Error("Invalid Vendor Code"));
+    },
+    getComparisonForItem: (itemName: string) => {
+        const comparisons: { vendorName: string; price: number; unit: string }[] = [];
+        const linkedVendors = mockVendors.filter(v => v.isLinked);
+        
+        for (const vendor of linkedVendors) {
+            const item = vendor.items?.find(i => i.name.toLowerCase().includes(itemName.toLowerCase()));
+            if (item) {
+                comparisons.push({ vendorName: vendor.name, price: item.price, unit: item.unit });
+            }
+        }
+        return simulateApiCall(comparisons);
+    },
     getWaitersForOutlet: (outletId: string) => {
         const waiters = mockUsers.filter(u => u.role === UserRole.Waiter && u.outletIds.includes(outletId));
         return simulateApiCall(waiters);
@@ -419,6 +464,33 @@ export const api = {
         }
         return Promise.reject(new Error("Table or Waiter not found"));
     },
+    clubTables: (tableIds: string[], user: User, outlet: Outlet) => {
+        const clubId = `club-${Date.now()}`;
+        const tablesToClub = mockTables.filter(t => tableIds.includes(t.id));
+        if (tablesToClub.length !== tableIds.length || tablesToClub.some(t => t.status !== TableStatus.Available)) {
+            return Promise.reject(new Error("One or more tables are not available for clubbing."));
+        }
+        tablesToClub.forEach(t => t.clubId = clubId);
+        logActivity({
+            userId: user.id, userName: user.name, userRole: user.role, outletId: outlet.id, outletName: outlet.name,
+            action: 'Table Clubbing', details: `Clubbed tables: ${tablesToClub.map(t => t.name).join(', ')}`
+        });
+        return simulateApiCall(tablesToClub);
+    },
+    unclubTables: (clubId: string, user: User, outlet: Outlet) => {
+        const tablesToUnclub = mockTables.filter(t => t.clubId === clubId);
+        tablesToUnclub.forEach(t => {
+            t.clubId = undefined;
+            t.status = TableStatus.Available;
+            t.orderId = undefined;
+            t.seatedAt = null;
+        });
+        logActivity({
+            userId: user.id, userName: user.name, userRole: user.role, outletId: outlet.id, outletName: outlet.name,
+            action: 'Table Unclubbed', details: `Unclubbed tables: ${tablesToUnclub.map(t => t.name).join(', ')}`
+        });
+        return simulateApiCall(tablesToUnclub);
+    },
     // Waiter APIs
     getTablesForWaiter: (waiterId: string) => simulateApiCall(mockTables.filter(t => t.assignedWaiterId === waiterId)),
     getCustomerOrder: (orderId: string) => simulateApiCall(mockCustomerOrders.find(o => o.id === orderId) || null),
@@ -439,41 +511,54 @@ export const api = {
         return simulateApiCall(metrics);
     },
     getMenuItems: () => simulateApiCall(mockMenuItems),
-    startTableSession: (tableId: string, covers: number, waiterId: string) => {
-        const table = mockTables.find(t => t.id === tableId);
-        if (table && table.status === TableStatus.Available) {
-            const newOrder: CustomerOrder = {
-                id: `co-${Date.now()}`,
-                tableId,
-                waiterId,
-                covers,
-                items: [],
-                total: 0,
-                status: 'Open',
-            };
-            mockCustomerOrders.push(newOrder);
+    startTableSession: (tableIds: string[], covers: number, waiterId: string) => {
+        const tables = mockTables.filter(t => tableIds.includes(t.id));
+        if (tables.length !== tableIds.length || tables.some(t => t.status !== TableStatus.Available)) {
+             return Promise.reject(new Error("One or more tables are not available."));
+        }
+
+        const newOrder: CustomerOrder = {
+            id: `co-${Date.now()}`,
+            tableId: tables[0].clubId || tables[0].id,
+            waiterId,
+            covers,
+            items: [],
+            total: 0,
+            status: 'Open',
+        };
+        mockCustomerOrders.push(newOrder);
+
+        tables.forEach(table => {
             table.status = TableStatus.Seated;
             table.seatedAt = Date.now();
             table.orderId = newOrder.id;
-            return simulateApiCall({ table, order: newOrder });
-        }
-        return Promise.reject(new Error("Table is not available"));
+        });
+        
+        return simulateApiCall({ tables, order: newOrder });
     },
-    closeOrder: (orderId: string) => {
+    closeOrder: (orderId: string, user: User, outlet: Outlet) => {
         const order = mockCustomerOrders.find(o => o.id === orderId);
         if (order) {
             order.status = 'Closed';
-            const table = mockTables.find(t => t.id === order.tableId);
-            if (table) {
-                table.status = TableStatus.Available;
-                table.seatedAt = null;
-                table.orderId = undefined;
-                
-                // BUG FIX: Remove the KOT from the chef's view when the bill is closed.
-                mockKots = mockKots.filter(kot => kot.tableId !== table.id);
+            const tables = mockTables.filter(t => t.orderId === orderId);
+            const clubId = tables.find(t => t.clubId)?.clubId;
 
-                return simulateApiCall({ order, table });
+            if (clubId) {
+                // If tables were clubbed, unclub them now.
+                api.unclubTables(clubId, user, outlet);
+            } else if (tables.length > 0) {
+                // Handle single table
+                tables.forEach(table => {
+                    table.status = TableStatus.Available;
+                    table.seatedAt = null;
+                    table.orderId = undefined;
+                });
             }
+            
+            // BUG FIX: Remove the KOT from the chef's view when the bill is closed.
+            mockKots = mockKots.filter(kot => kot.tableId !== order.tableId);
+
+            return simulateApiCall({ order, tables });
         }
         return Promise.reject(new Error("Order not found"));
     },
@@ -488,19 +573,20 @@ export const api = {
     // KOT APIs
     sendKotToKitchen: (orderId: string, newItems: Omit<CustomerOrderItem, 'status'>[]) => {
         const order = mockCustomerOrders.find(o => o.id === orderId);
-        const table = mockTables.find(t => t.id === order?.tableId);
-        if (order && table) {
+        const tables = mockTables.filter(t => t.orderId === orderId);
+        if (order && tables.length > 0) {
+            const table = tables[0]; // Use the first table for identification
             const kotItems: KOTItem[] = newItems.map(item => ({ name: item.name, quantity: item.quantity, status: KotStatus.New }));
             
-            let kot = mockKots.find(k => k.tableId === table.id);
+            let kot = mockKots.find(k => k.tableId === order.tableId);
             if(kot) {
                 kot.items.push(...kotItems);
             } else {
                 kot = {
                     id: `kot-${Date.now()}`,
-                    tableId: table.id,
-                    tableName: table.name,
-                    orderIdentifier: table.name,
+                    tableId: order.tableId,
+                    tableName: table.clubId ? `Club (${tables.map(t=>t.name).join(', ')})` : table.name,
+                    orderIdentifier: table.clubId ? `Club (${tables.map(t=>t.name).join(', ')})` : table.name,
                     items: kotItems,
                     createdAt: Date.now(),
                     outletId: 'outlet-1',
@@ -515,10 +601,12 @@ export const api = {
                 order.total += newItem.price * newItem.quantity;
             });
 
-            if (table.status === TableStatus.Seated) {
-                table.status = TableStatus.Ordered;
-            }
-
+            tables.forEach(t => {
+                if (t.status === TableStatus.Seated) {
+                    t.status = TableStatus.Ordered;
+                }
+            });
+            
             return simulateApiCall({ kot, updatedOrder: order });
         }
         return Promise.reject(new Error("Order or Table not found"));
@@ -548,10 +636,10 @@ export const api = {
             if (kot.orderType === OrderType.DineIn && kot.tableId) {
                 const anyItemReady = kot.items.some(item => item.status === KotStatus.Ready);
                 if (anyItemReady) {
-                    const table = mockTables.find(t => t.id === kot.tableId);
-                    if (table) {
+                    const tables = mockTables.filter(t => t.clubId === kot.tableId || t.id === kot.tableId);
+                    tables.forEach(table => {
                         table.status = TableStatus.FoodReady;
-                    }
+                    });
                 }
             }
             return simulateApiCall(kot);
@@ -607,7 +695,7 @@ export const api = {
         return Promise.reject(new Error("User not found"));
     },
     getMenuEngineeringReport: (outletId: string): Promise<MenuEngineeringItem[]> => {
-        const relevantOrders = mockCustomerOrders.filter(o => o.status === 'Closed' && mockTables.find(t => t.id === o.tableId)?.floorId.startsWith('floor-')); // A simple way to check if it's an outlet table
+        const relevantOrders = mockCustomerOrders.filter(o => o.status === 'Closed' && mockTables.find(t => t.id === o.tableId || t.clubId === o.tableId)?.floorId.startsWith('floor-')); // A simple way to check if it's an outlet table
         
         const salesCount: { [key: string]: { unitsSold: number; menuItem: MenuItem } } = {};
         let totalUnitsSold = 0;

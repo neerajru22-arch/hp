@@ -10,7 +10,7 @@ import { useAuth } from '../auth/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, } from 'recharts';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import { PlusIcon, TrashIcon } from '../components/icons/Icons';
+import { PlusIcon, TrashIcon, LinkIcon, MagnifyingGlassIcon } from '../components/icons/Icons';
 
 const getOrderStatusBadge = (status: OrderStatus) => {
   const baseClasses = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full';
@@ -275,25 +275,30 @@ const useElapsedTime = (startTime: number | null) => {
 
 // --- START: Waiter Dashboard ---
 const TableManagementModal: React.FC<{
-    table: TableType;
+    tables: TableType[];
     onClose: () => void;
     onAction: () => void;
     waiterId: string;
-}> = ({ table, onClose, onAction, waiterId }) => {
-    const { data: orderResult, loading: orderLoading, refetch: refetchOrder } = useApi(api.getCustomerOrder, table.orderId || '');
+}> = ({ tables, onClose, onAction, waiterId }) => {
+    const isClubbed = tables.length > 1;
+    const representativeTable = tables[0];
+    const combinedCapacity = tables.reduce((sum, t) => sum + t.capacity, 0);
+
+    const { data: orderResult, loading: orderLoading, refetch: refetchOrder } = useApi(api.getCustomerOrder, representativeTable.orderId || '');
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
     const [covers, setCovers] = useState(1);
     const [newlyAddedItems, setNewlyAddedItems] = useState<Omit<CustomerOrderItem, 'status'>[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const isCoversInvalid = covers <= 0 || covers > table.capacity;
+    const isCoversInvalid = covers <= 0 || covers > combinedCapacity;
 
     const handleSeatCustomers = async () => {
         if (isCoversInvalid) {
-            alert(`Please enter a valid number of guests (1-${table.capacity}).`);
+            alert(`Please enter a valid number of guests (1-${combinedCapacity}).`);
             return;
         }
-        await api.startTableSession(table.id, covers, waiterId);
+        await api.startTableSession(tables.map(t => t.id), covers, waiterId);
         onAction();
         onClose();
     };
@@ -309,8 +314,8 @@ const TableManagementModal: React.FC<{
     };
 
     const handleSendToKitchen = async () => {
-        if (table.orderId && newlyAddedItems.length > 0) {
-            await api.sendKotToKitchen(table.orderId, newlyAddedItems);
+        if (representativeTable.orderId && newlyAddedItems.length > 0) {
+            await api.sendKotToKitchen(representativeTable.orderId, newlyAddedItems);
             setNewlyAddedItems([]);
             refetchOrder(); // Refetch the main order to show updated items
             onAction(); // This will refetch tables to update status from Seated -> Ordered
@@ -318,27 +323,32 @@ const TableManagementModal: React.FC<{
     };
 
     const handleFinalizeBill = async () => {
-        if (table.orderId) {
-            await api.closeOrder(table.orderId);
+        const { user, selectedOutlet } = useAuth();
+        if (representativeTable.orderId && user && selectedOutlet) {
+            await api.closeOrder(representativeTable.orderId, user, selectedOutlet);
             onAction();
             onClose();
         }
     };
 
-    const elapsedTime = useElapsedTime(table.seatedAt);
-    const newItemsTotal = newlyAddedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const elapsedTime = useElapsedTime(representativeTable.seatedAt);
     const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 
     const menuCategories = ['All', ...new Set(menuItems?.map(item => item.category) || [])];
-    const filteredMenuItems = menuItems?.filter(item => selectedCategory === 'All' || item.category === selectedCategory);
+    
+    const filteredMenuItems = menuItems
+        ?.filter(item => selectedCategory === 'All' || item.category === selectedCategory)
+        .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const modalTitle = isClubbed ? `Club (${tables.map(t => t.name).join(', ')})` : `${representativeTable.name} - Management`;
 
     return (
-        <Modal isOpen={true} onClose={onClose} title={`${table.name} - Management`}>
-            {table.status === TableStatus.Available ? (
+        <Modal isOpen={true} onClose={onClose} title={modalTitle}>
+            {representativeTable.status === TableStatus.Available ? (
                 <div>
                     <div className="p-6">
                         <h3 className="font-semibold text-lg text-secondary">Seat New Customers</h3>
-                        <p className="text-sm text-slate-500">Capacity: {table.capacity}</p>
+                        <p className="text-sm text-slate-500">Combined Capacity: {combinedCapacity}</p>
                         <div className="mt-4">
                             <label htmlFor="covers" className="block text-sm font-medium text-slate-700">Number of Guests</label>
                             <input 
@@ -347,10 +357,10 @@ const TableManagementModal: React.FC<{
                                 value={covers} 
                                 onChange={(e) => setCovers(parseInt(e.target.value, 10) || 1)} 
                                 min="1" 
-                                max={table.capacity}
+                                max={combinedCapacity}
                                 className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                             />
-                             {isCoversInvalid && covers > 0 && <p className="text-red-600 text-sm mt-1">Please enter a number between 1 and {table.capacity}.</p>}
+                             {isCoversInvalid && covers > 0 && <p className="text-red-600 text-sm mt-1">Please enter a number between 1 and {combinedCapacity}.</p>}
                         </div>
                     </div>
                     <div className="p-4 bg-slate-50 rounded-b-lg flex justify-end space-x-2">
@@ -410,6 +420,16 @@ const TableManagementModal: React.FC<{
                         {/* Right Side: Menu */}
                         <div className="p-4 md:p-6 flex flex-col">
                             <h3 className="font-semibold text-lg text-secondary mb-4">Add to Order</h3>
+                            <div className="relative mb-4">
+                                <input
+                                    type="text"
+                                    placeholder="Search menu items..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                            </div>
                             <div className="mb-4">
                                 <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
                                     {menuCategories.map(category => (
@@ -472,6 +492,7 @@ const TakeawayModal: React.FC<{
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
     const [newlyAddedItems, setNewlyAddedItems] = useState<Omit<CustomerOrderItem, 'status'>[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     
     const handleAddItem = (item: MenuItem) => {
         setNewlyAddedItems(prev => {
@@ -494,7 +515,9 @@ const TakeawayModal: React.FC<{
     const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 
     const menuCategories = ['All', ...new Set(menuItems?.map(item => item.category) || [])];
-    const filteredMenuItems = menuItems?.filter(item => selectedCategory === 'All' || item.category === selectedCategory);
+    const filteredMenuItems = menuItems
+        ?.filter(item => selectedCategory === 'All' || item.category === selectedCategory)
+        .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <Modal isOpen={true} onClose={onClose} title="New Takeaway Order">
@@ -521,6 +544,16 @@ const TakeawayModal: React.FC<{
                     </div>
                     <div className="p-4 md:p-6 flex flex-col">
                          <h3 className="font-semibold text-lg text-secondary mb-4">Menu</h3>
+                         <div className="relative mb-4">
+                            <input
+                                type="text"
+                                placeholder="Search menu items..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                        </div>
                         <div className="mb-4">
                             <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
                                 {menuCategories.map(category => (
@@ -573,53 +606,30 @@ const TakeawayModal: React.FC<{
 };
 
 
-const TableCard: React.FC<{table: TableType, onClick: () => void}> = ({ table, onClick }) => {
+const TableCard: React.FC<{
+    table: TableType; 
+    onClick: () => void;
+    isSelected?: boolean;
+    isClubbingMode?: boolean;
+}> = ({ table, onClick, isSelected, isClubbingMode }) => {
     const elapsedTime = useElapsedTime(table.seatedAt);
 
     const statusStyles = {
-        [TableStatus.Available]: {
-            container: 'bg-green-100 border-green-300',
-            primaryText: 'text-green-800',
-            secondaryText: 'text-green-700',
-            badge: 'bg-green-200 text-green-800',
-            timer: 'bg-green-200 text-green-800',
-        },
-        [TableStatus.Seated]: {
-            container: 'bg-blue-100 border-blue-300',
-            primaryText: 'text-blue-800',
-            secondaryText: 'text-blue-700',
-            badge: 'bg-blue-200 text-blue-800',
-            timer: 'bg-blue-200 text-blue-800',
-        },
-        [TableStatus.Ordered]: {
-            container: 'bg-violet-100 border-violet-300',
-            primaryText: 'text-violet-800',
-            secondaryText: 'text-violet-800',
-            badge: 'bg-violet-100 text-violet-800',
-            timer: 'bg-violet-100 text-violet-800',
-        },
-        [TableStatus.NeedsAttention]: {
-            container: 'bg-yellow-100 border-yellow-400',
-            primaryText: 'text-yellow-800',
-            secondaryText: 'text-yellow-700',
-            badge: 'bg-yellow-200 text-yellow-800',
-            timer: 'bg-yellow-200 text-yellow-800',
-        },
-        [TableStatus.FoodReady]: {
-            container: 'bg-teal-500 border-teal-700',
-            primaryText: 'text-white',
-            secondaryText: 'text-teal-100',
-            badge: 'bg-teal-600 text-white',
-            timer: 'bg-teal-600 text-white',
-        }
+        [TableStatus.Available]: { container: 'bg-green-100 border-green-300', primaryText: 'text-green-800', secondaryText: 'text-green-700', badge: 'bg-green-200 text-green-800', timer: 'bg-green-200 text-green-800' },
+        [TableStatus.Seated]: { container: 'bg-blue-100 border-blue-300', primaryText: 'text-blue-800', secondaryText: 'text-blue-700', badge: 'bg-blue-200 text-blue-800', timer: 'bg-blue-200 text-blue-800' },
+        [TableStatus.Ordered]: { container: 'bg-violet-100 border-violet-300', primaryText: 'text-violet-800', secondaryText: 'text-violet-800', badge: 'bg-violet-100 text-violet-800', timer: 'bg-violet-100 text-violet-800' },
+        [TableStatus.NeedsAttention]: { container: 'bg-yellow-100 border-yellow-400', primaryText: 'text-yellow-800', secondaryText: 'text-yellow-700', badge: 'bg-yellow-200 text-yellow-800', timer: 'bg-yellow-200 text-yellow-800' },
+        [TableStatus.FoodReady]: { container: 'bg-teal-500 border-teal-700', primaryText: 'text-white', secondaryText: 'text-teal-100', badge: 'bg-teal-600 text-white', timer: 'bg-teal-600 text-white' }
     };
     
     const styles = statusStyles[table.status];
+    const selectionClass = isSelected ? 'ring-4 ring-offset-2 ring-primary' : '';
+    const clubbingModeClass = isClubbingMode && table.status === TableStatus.Available ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1' : (isClubbingMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg hover:-translate-y-1');
 
     return (
         <div 
             onClick={onClick}
-            className={`p-4 rounded-lg border-2 shadow-sm cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col justify-between ${styles.container}`}
+            className={`p-4 rounded-lg border-2 shadow-sm transition-all flex flex-col justify-between ${styles.container} ${selectionClass} ${clubbingModeClass}`}
         >
             <div className="flex justify-between items-center">
                 <h3 className={`font-bold text-lg ${styles.primaryText}`}>{table.name}</h3>
@@ -638,26 +648,62 @@ const TableCard: React.FC<{table: TableType, onClick: () => void}> = ({ table, o
 };
 
 const WaiterDashboard: React.FC = () => {
-    const { user } = useAuth();
+    const { user, selectedOutlet } = useAuth();
     const { data: metrics, loading: metricsLoading, refetch: refetchMetrics } = useApi(api.getWaiterDashboardMetrics, user!.id);
     const { data: tables, loading: tablesLoading, refetch: refetchTables } = useApi(api.getTablesForWaiter, user!.id);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
+    const [modalState, setModalState] = useState<{ tables: TableType[] } | null>(null);
     const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState(false);
+    const [isClubbing, setIsClubbing] = useState(false);
+    const [selectedForClubbing, setSelectedForClubbing] = useState<string[]>([]);
 
     const handleTableClick = async (table: TableType) => {
+        if (isClubbing) {
+            if (table.status === TableStatus.Available) {
+                setSelectedForClubbing(prev => prev.includes(table.id) ? prev.filter(id => id !== table.id) : [...prev, table.id]);
+            }
+            return;
+        }
+        
         if (table.status === TableStatus.FoodReady) {
             await api.acknowledgeFoodReady(table.id);
             refetchTables();
         }
-        setSelectedTable(table);
-        setIsModalOpen(true);
+        setModalState({ tables: [table] });
     }
+
+    const handleClubbedTableClick = (clubbedTables: TableType[]) => {
+        if (isClubbing) return; // Don't open modal in clubbing mode
+        setModalState({ tables: clubbedTables });
+    };
+
+    const handleConfirmClubbing = async () => {
+        if (selectedForClubbing.length < 2 || !user || !selectedOutlet) return;
+        try {
+            await api.clubTables(selectedForClubbing, user, selectedOutlet);
+            refetchTables();
+            setIsClubbing(false);
+            setSelectedForClubbing([]);
+        } catch (error) {
+            alert("Failed to club tables. Please ensure all selected tables are available.");
+        }
+    };
     
     const handleAction = () => {
         refetchTables();
         refetchMetrics();
     }
+
+    // Process tables to group clubbed ones
+    const unclubbedTables = tables?.filter(t => !t.clubId) || [];
+    const clubbedTableGroups: { [key: string]: TableType[] } = {};
+    tables?.forEach(t => {
+        if (t.clubId) {
+            if (!clubbedTableGroups[t.clubId]) {
+                clubbedTableGroups[t.clubId] = [];
+            }
+            clubbedTableGroups[t.clubId].push(t);
+        }
+    });
     
     return (
         <div className="space-y-6">
@@ -678,18 +724,56 @@ const WaiterDashboard: React.FC = () => {
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-secondary">My Assigned Tables</h3>
-                    <Button onClick={() => setIsTakeawayModalOpen(true)} leftIcon={<PlusIcon className="w-5 h-5"/>}>
-                        New Takeaway Order
-                    </Button>
+                    <div className="flex space-x-2">
+                        <Button onClick={() => { setIsClubbing(prev => !prev); setSelectedForClubbing([]); }} leftIcon={<LinkIcon className="w-5 h-5"/>} variant={isClubbing ? 'primary' : 'secondary'}>
+                            {isClubbing ? 'Cancel Clubbing' : 'Club Tables'}
+                        </Button>
+                        <Button onClick={() => setIsTakeawayModalOpen(true)} leftIcon={<PlusIcon className="w-5 h-5"/>}>
+                            New Takeaway Order
+                        </Button>
+                    </div>
                 </div>
                 {tablesLoading ? <p>Loading tables...</p> : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                        {tables?.map(table => <TableCard key={table.id} table={table} onClick={() => handleTableClick(table)}/>)}
+                        {/* Render Clubbed Tables */}
+                        {Object.values(clubbedTableGroups).map(group => {
+                            const combinedCapacity = group.reduce((sum, t) => sum + t.capacity, 0);
+                            return (
+                                <div key={group[0].clubId} className="bg-slate-100 p-2 rounded-lg border border-slate-300 shadow-md col-span-2">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className="font-bold text-secondary">Club: {group.map(t=>t.name).join(' + ')}</h4>
+                                        <p className="text-sm">Capacity: {combinedCapacity}</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2" onClick={() => handleClubbedTableClick(group)}>
+                                      {group.map(table => <TableCard key={table.id} table={table} onClick={() => {}} />)}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {/* Render Unclubbed Tables */}
+                        {unclubbedTables.map(table => (
+                            <TableCard 
+                                key={table.id} 
+                                table={table} 
+                                onClick={() => handleTableClick(table)}
+                                isClubbingMode={isClubbing}
+                                isSelected={selectedForClubbing.includes(table.id)}
+                            />
+                        ))}
                     </div>
                 )}
             </div>
+            
+            {isClubbing && selectedForClubbing.length > 0 && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-lg bg-secondary text-white p-4 rounded-lg shadow-2xl flex justify-between items-center">
+                    <p className="font-semibold">Selected {selectedForClubbing.length} tables to club.</p>
+                    <Button onClick={handleConfirmClubbing} disabled={selectedForClubbing.length < 2}>
+                        Confirm
+                    </Button>
+                </div>
+            )}
 
-            {isModalOpen && selectedTable && <TableManagementModal table={selectedTable} onClose={() => setIsModalOpen(false)} onAction={handleAction} waiterId={user!.id} />}
+            {modalState && <TableManagementModal tables={modalState.tables} onClose={() => setModalState(null)} onAction={handleAction} waiterId={user!.id} />}
             {isTakeawayModalOpen && <TakeawayModal onClose={() => setIsTakeawayModalOpen(false)} outletId={user!.outletIds[0]} />}
         </div>
     );
