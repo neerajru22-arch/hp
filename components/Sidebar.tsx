@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon, PlusIcon, LightBulbIcon } from './icons/Icons';
+import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon, PlusIcon, LightBulbIcon, ArchiveBoxXMarkIcon, DocumentMagnifyingGlassIcon, MapIcon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
 
@@ -90,9 +90,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/vendors', icon: BuildingStorefrontIcon, text: 'Vendors' },
   ];
 
+  const floorManagementLink = { to: '/floor-management', icon: MapIcon, text: 'Floor Management', roles: [UserRole.Manager, UserRole.Admin, UserRole.RestaurantOwner] };
+
   const analysisLinks = [
     { to: '/menu-engineering', icon: LightBulbIcon, text: 'Menu Engineering' },
   ];
+
+  const loggingLinks = [
+    { to: '/wastage', icon: ArchiveBoxXMarkIcon, text: 'Wastage Log', roles: [UserRole.Admin, UserRole.RestaurantOwner, UserRole.Chef, UserRole.StoreManager] },
+    { to: '/activity-log', icon: DocumentMagnifyingGlassIcon, text: 'Activity Log', roles: [UserRole.Admin, UserRole.RestaurantOwner] },
+  ]
 
   const roleLinks = {
     [UserRole.RestaurantOwner]: [
@@ -111,11 +118,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/finance', icon: BanknotesIcon, text: 'Finance' },
       { to: '/structure', icon: ShareIcon, text: 'Entity Structure' },
     ],
+    [UserRole.Manager]: [
+        { to: '/dashboard', icon: ChartBarIcon, text: 'Dashboard' },
+        { to: '/orders', icon: DocumentTextIcon, text: 'Orders' },
+        { to: '/staff', icon: UserGroupIcon, text: 'Staff' },
+    ],
     [UserRole.Chef]: [
       { to: '/dashboard', icon: ClipboardDocumentListIcon, text: 'KOT View' },
       { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
       ...analysisLinks,
-      { to: '/dashboard?request-ingredients=true', icon: PlusIcon, text: 'Request Ingredients' },
+      { to: '/dashboard?raise-indent=true', icon: PlusIcon, text: 'Raise Indent' },
     ],
     [UserRole.StoreManager]: [
         { to: '/dashboard', icon: ChartBarIcon, text: 'Dashboard' },
@@ -133,7 +145,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ],
   };
 
-  const links = user ? roleLinks[user.role] || commonLinks : [];
+  const mainNavLinks = user ? roleLinks[user.role] || commonLinks : [];
+  const auditNavLinks = user ? loggingLinks.filter(link => link.roles.includes(user.role)) : [];
+  const dynamicLinks = user ? [floorManagementLink].filter(link => link.roles.includes(user.role)) : [];
+
 
   const sidebarClasses = `
     flex flex-col w-64 bg-white border-r border-slate-200
@@ -160,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {links.map(link => (
+          {mainNavLinks.map(link => (
             <NavLink 
               key={link.to} 
               to={link.to} 
@@ -171,6 +186,39 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               {link.text}
             </NavLink>
           ))}
+
+          {dynamicLinks.length > 0 && (
+             <div className="pt-4 mt-4 border-t">
+                 {dynamicLinks.map(link => (
+                    <NavLink 
+                      key={link.to} 
+                      to={link.to} 
+                      className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <link.icon className="w-6 h-6 mr-3" />
+                      {link.text}
+                    </NavLink>
+                  ))}
+             </div>
+          )}
+
+          {auditNavLinks.length > 0 && (
+            <div className="pt-4 mt-4 border-t">
+              <h3 className="px-4 text-xs font-semibold uppercase text-slate-500 mb-2">Logs & Reports</h3>
+              {auditNavLinks.map(link => (
+                <NavLink 
+                  key={link.to} 
+                  to={link.to} 
+                  className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <link.icon className="w-6 h-6 mr-3" />
+                  {link.text}
+                </NavLink>
+              ))}
+            </div>
+          )}
         </nav>
         <div className="px-4 py-4 border-t border-slate-200">
           <div className="flex items-center space-x-3 mb-4">

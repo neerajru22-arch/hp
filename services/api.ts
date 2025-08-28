@@ -1,5 +1,5 @@
 
-import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient, CustomerOrderItemStatus, MenuEngineeringCategory, MenuEngineeringItem } from '../types';
+import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient, CustomerOrderItemStatus, MenuEngineeringCategory, MenuEngineeringItem, WastageEntry, ActivityLogEntry, WastageReason } from '../types';
 
 // --- MOCK DATABASE ---
 
@@ -10,6 +10,7 @@ let mockUsers: User[] = [
   { id: 'user-4', name: 'Rajesh Kumar', email: 'store.manager@halfplate.com', role: UserRole.StoreManager, outletIds: ['outlet-1', 'outlet-2'], kras: ['Inventory Accuracy', 'Stock Rotation'] },
   { id: 'user-5', name: 'Meera Desai', email: 'procurement@halfplate.com', role: UserRole.Procurement, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Vendor Negotiation', 'Purchase Order Accuracy'] },
   { id: 'user-6', name: 'Arjun Sharma', email: 'waiter@halfplate.com', role: UserRole.Waiter, outletIds: ['outlet-1'], kras: ['Guest Satisfaction', 'Upselling'] },
+  { id: 'user-7', name: 'Anjali Sharma', email: 'manager@halfplate.com', role: UserRole.Manager, outletIds: ['outlet-1'], kras: ['Shift Management', 'Guest Experience', 'Team Training'] },
 ];
 
 let mockVendors: Vendor[] = [
@@ -133,7 +134,7 @@ const mockDashboardMetrics: {[key: string]: DashboardMetric[]} = {
     'outlet-1': [
         { title: "Today's Sales", value: '280000', change: '12%', changeType: 'increase', description: 'vs yesterday' },
         { title: 'Food Cost %', value: '28.5', change: '0.5%', changeType: 'increase', description: 'vs last month' },
-        { title: 'Average Bill Value', value: '3500', change: '2.1%', changeType: 'increase', description: 'vs last week' },
+        { title: 'Wastage %', value: '2.1', change: '0.2%', changeType: 'increase', description: 'of total procurement' },
         { title: 'Vendor OTIF', value: '96', change: '1.2%', changeType: 'decrease', description: 'On-Time In-Full' },
     ],
     'outlet-2': [
@@ -148,6 +149,21 @@ const mockDashboardMetrics: {[key: string]: DashboardMetric[]} = {
         { title: 'Average Bill Value', value: '4100', change: '3.0%', changeType: 'increase', description: 'vs last week' },
         { title: 'Vendor OTIF', value: '98', change: '0.5%', changeType: 'increase', description: 'On-Time In-Full' },
     ],
+};
+
+const mockManagerDashboardMetrics: {[key: string]: DashboardMetric[]} = {
+    'outlet-1': [
+        { title: "Today's Sales", value: '280000', change: '12%', changeType: 'increase', description: 'vs yesterday' },
+        { title: 'Table Turnover', value: '3.5', description: 'Times per table today' },
+        { title: 'Average Bill Value', value: '3200', change: '1.5%', changeType: 'increase', description: 'vs last shift' },
+        { title: 'Staff Attendance', value: '97', description: 'Percent on shift today' },
+    ],
+    'outlet-2': [
+        { title: "Today's Sales", value: '195000', change: '8%', changeType: 'decrease', description: 'vs yesterday' },
+        { title: 'Table Turnover', value: '2.8', description: 'Times per table today' },
+        { title: 'Average Bill Value', value: '2800', change: '0.5%', changeType: 'decrease', description: 'vs last shift' },
+        { title: 'Staff Attendance', value: '94', description: 'Percent on shift today' },
+    ]
 };
 
 const mockStoreManagerDashboardMetrics: {[key: string]: DashboardMetric[]} = {
@@ -218,6 +234,18 @@ let mockCustomerOrders: CustomerOrder[] = [
 let mockKots: KOT[] = [];
 let takeawayOrderCounter = 1;
 
+let mockWastageLog: WastageEntry[] = [
+    { id: 'w-1', outletId: 'outlet-1', itemName: 'Tomatoes', quantity: 5, unit: 'kg', reason: WastageReason.Spoilage, loggedBy: 'Rajesh Kumar', date: '2023-10-28' },
+    { id: 'w-2', outletId: 'outlet-1', itemName: 'Paneer Tikka', quantity: 2, unit: 'portion', reason: WastageReason.CookingError, loggedBy: 'Sanjeev Kapoor', date: '2023-10-28' },
+    { id: 'w-3', outletId: 'outlet-2', itemName: 'Amul Milk', quantity: 1, unit: 'L', reason: WastageReason.Expired, loggedBy: 'Store Manager', date: '2023-10-27' },
+];
+
+let mockActivityLog: ActivityLogEntry[] = [
+    { id: 'act-1', timestamp: new Date(Date.now() - 3600000).toISOString(), userId: 'user-1', userName: 'Priya Singh', userRole: UserRole.RestaurantOwner, outletId: 'outlet-2', outletName: 'Bandra Cafe', action: 'User Update', details: 'Updated user: Isha Gupta' },
+    { id: 'act-2', timestamp: new Date(Date.now() - 7200000).toISOString(), userId: 'user-3', userName: 'Sanjeev Kapoor', userRole: UserRole.Chef, outletId: 'outlet-1', outletName: 'Koramangala Kitchen', action: 'KOT Status', details: 'Marked "2x Paneer Tikka" as Preparing for Table 4' },
+    { id: 'act-3', timestamp: new Date(Date.now() - 10800000).toISOString(), userId: 'user-6', userName: 'Arjun Sharma', userRole: UserRole.Waiter, outletId: 'outlet-1', outletName: 'Koramangala Kitchen', action: 'Bill Finalized', details: 'Closed order co-closed-1 for Table 1 (₹700)' },
+];
+
 // --- API SIMULATION ---
 
 const simulateApiCall = <T,>(data: T, delay?: number): Promise<T> => {
@@ -227,6 +255,17 @@ const simulateApiCall = <T,>(data: T, delay?: number): Promise<T> => {
         }, delay ?? 300 + Math.random() * 400);
     });
 };
+
+// --- LOGGING HELPER ---
+const logActivity = (logData: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => {
+    const newLog: ActivityLogEntry = {
+        ...logData,
+        id: `act-${Date.now()}`,
+        timestamp: new Date().toISOString()
+    };
+    mockActivityLog.unshift(newLog);
+};
+
 
 export const api = {
     login: (email: string) => {
@@ -314,6 +353,7 @@ export const api = {
     getFinanceData: (outletId: string) => simulateApiCall(mockFinanceData.filter(f => f.outletId === outletId)),
     getDashboardMetrics: (outletId: string) => simulateApiCall(mockDashboardMetrics[outletId] || []),
     getSalesData: (outletId: string, period: 'week' | 'month' | 'year') => simulateApiCall(mockSalesDataByOutlet[outletId]?.[period] || []),
+    getManagerDashboardMetrics: (outletId: string) => simulateApiCall(mockManagerDashboardMetrics[outletId] || []),
     getStoreManagerDashboardMetrics: (outletId: string) => simulateApiCall(mockStoreManagerDashboardMetrics[outletId] || []),
     getRequisitions: (outletId: string) => simulateApiCall(mockRequisitions.filter(r => r.outletId === outletId)),
     createRequisition: (outletId: string, department: Department, requestedBy: string, items: RequisitionItem[]) => {
@@ -356,6 +396,28 @@ export const api = {
             return simulateApiCall(vendor);
         }
         return Promise.reject(new Error("Vendor not found"));
+    },
+    getWaitersForOutlet: (outletId: string) => {
+        const waiters = mockUsers.filter(u => u.role === UserRole.Waiter && u.outletIds.includes(outletId));
+        return simulateApiCall(waiters);
+    },
+    updateTableAssignment: (tableId: string, waiterId: string, managerUser: User, outlet: Outlet) => {
+        const table = mockTables.find(t => t.id === tableId);
+        const waiter = mockUsers.find(u => u.id === waiterId);
+        if(table && waiter) {
+            table.assignedWaiterId = waiterId;
+            logActivity({
+                userId: managerUser.id,
+                userName: managerUser.name,
+                userRole: managerUser.role,
+                outletId: outlet.id,
+                outletName: outlet.name,
+                action: 'Table Assignment',
+                details: `Assigned ${waiter.name} to ${table.name}`
+            });
+            return simulateApiCall(table);
+        }
+        return Promise.reject(new Error("Table or Waiter not found"));
     },
     // Waiter APIs
     getTablesForWaiter: (waiterId: string) => simulateApiCall(mockTables.filter(t => t.assignedWaiterId === waiterId)),
@@ -604,5 +666,21 @@ export const api = {
         });
 
         return simulateApiCall(report);
-    }
+    },
+    // New Logging APIs
+    getWastageLog: (outletId: string) => simulateApiCall(mockWastageLog.filter(w => w.outletId === outletId)),
+    addWastageEntry: (entry: Omit<WastageEntry, 'id' | 'date'>) => {
+        const newEntry: WastageEntry = {
+            ...entry,
+            id: `w-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0]
+        };
+        mockWastageLog.unshift(newEntry);
+        return simulateApiCall(newEntry);
+    },
+    getActivityLog: (outletIds: string[]) => simulateApiCall(mockActivityLog.filter(l => outletIds.includes(l.outletId))),
+    logActivity: (logData: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => {
+        logActivity(logData); // Use the helper to add to the mock DB
+        return simulateApiCall({ success: true });
+    },
 };

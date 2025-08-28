@@ -48,6 +48,7 @@ const LoginPage: React.FC = () => {
               className="relative block w-full px-4 py-4 text-lg text-slate-900 border border-slate-300 rounded-md appearance-none focus:outline-none focus:ring-primary focus:border-primary md:py-3 md:text-base"
             >
               <option value="waiter@halfplate.com">Login as Waiter</option>
+              <option value="manager@halfplate.com">Login as Manager</option>
               <option value="owner@halfplate.com">Login as Restaurant Owner</option>
               <option value="store.manager@halfplate.com">Login as Store Manager</option>
               <option value="procurement@halfplate.com">Login as Procurement Manager</option>

@@ -16,6 +16,9 @@ import Requisitions from './pages/Requisitions';
 import Staff from './pages/Staff';
 import Vendors from './pages/Vendors';
 import MenuEngineering from './pages/MenuEngineering';
+import WastageLog from './pages/WastageLog';
+import ActivityLog from './pages/ActivityLog';
+import FloorManagement from './pages/FloorManagement';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
@@ -47,6 +50,9 @@ const AppLayout: React.FC = () => {
             <Route path="/staff" element={<Staff />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/menu-engineering" element={<MenuEngineering />} />
+            <Route path="/wastage" element={<WastageLog />} />
+            <Route path="/activity-log" element={<ActivityLog />} />
+            <Route path="/floor-management" element={<FloorManagement />} />
           </Routes>
         </main>
       </div>

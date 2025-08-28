@@ -13,7 +13,8 @@ export enum UserRole {
   Vendor = 'Vendor',
   Admin = 'Admin',
   StoreManager = 'Store Manager',
-  Waiter = 'Waiter'
+  Waiter = 'Waiter',
+  Manager = 'Manager'
 }
 
 export interface User {
@@ -265,4 +266,35 @@ export interface MenuEngineeringItem {
   unitsSold: number;
   profitPerItem: number;
   totalProfit: number;
+}
+
+export enum WastageReason {
+    Expired = 'Expired',
+    Spoilage = 'Spoilage',
+    CookingError = 'Cooking Error',
+    CancelledOrder = 'Cancelled Order',
+    Other = 'Other'
+}
+
+export interface WastageEntry {
+    id: string;
+    outletId: string;
+    itemName: string;
+    quantity: number;
+    unit: string;
+    reason: WastageReason;
+    loggedBy: string;
+    date: string; // YYYY-MM-DD
+}
+
+export interface ActivityLogEntry {
+    id: string;
+    timestamp: string; // ISO 8601 format
+    userId: string;
+    userName: string;
+    userRole: UserRole;
+    outletId: string;
+    outletName: string;
+    action: string;
+    details: string;
 }

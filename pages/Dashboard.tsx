@@ -5,7 +5,7 @@ import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import DashboardCard from '../components/DashboardCard';
 import Table, { Column } from '../components/Table';
-import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType, RequisitionItem, Department, DashboardMetric, CustomerOrderItemStatus } from '../types';
+import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType, RequisitionItem, Department, DashboardMetric, CustomerOrderItemStatus, StaffMember, StaffRole } from '../types';
 import { useAuth } from '../auth/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, } from 'recharts';
 import Button from '../components/Button';
@@ -37,7 +37,7 @@ const getRequisitionStatusBadge = (status: RequisitionStatus) => {
 const formatMetricValue = (metric: DashboardMetric): string => {
     const { title, value } = metric;
     const currencyMetrics = ["Today's Sales", "Average Bill Value", "Total Inventory Value", "My Sales"];
-    const percentageMetrics = ["Food Cost %", "Vendor OTIF"];
+    const percentageMetrics = ["Food Cost %", "Vendor OTIF", "Wastage %", "Staff Attendance"];
 
     const numberValue = Number(String(value).replace(/,/g, ''));
     if (isNaN(numberValue)) return String(value);
@@ -54,6 +54,11 @@ const formatMetricValue = (metric: DashboardMetric): string => {
         return `${value}%`;
     }
     
+    // For values like Table Turnover
+    if(title === 'Table Turnover') {
+        return `${value}x`;
+    }
+
     return new Intl.NumberFormat('en-IN').format(numberValue);
 };
 
@@ -135,6 +140,44 @@ const SalesDashboard: React.FC = () => {
               <Table data={orders?.slice(0, 5) || []} columns={orderColumns} />
             )}
           </div>
+        </div>
+    );
+};
+
+const ManagerDashboard: React.FC = () => {
+    const { selectedOutlet } = useAuth();
+    const { data: metrics, loading: metricsLoading } = useApi(api.getManagerDashboardMetrics, selectedOutlet?.id);
+    const { data: staff, loading: staffLoading } = useApi(api.getStaff, selectedOutlet?.id);
+    
+    const staffColumns: Column<StaffMember>[] = [
+        { header: 'Name', accessor: 'name' },
+        { header: 'Role', accessor: 'role' },
+        { header: 'Attendance', accessor: item => `${item.attendance}%` }
+    ];
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {metricsLoading ? (
+                     Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm animate-pulse">
+                            <div className="h-4 bg-slate-200 rounded w-1/3 mb-4"></div>
+                            <div className="h-8 bg-slate-200 rounded w-1/2 mb-2"></div>
+                            <div className="h-3 bg-slate-200 rounded w-1/4"></div>
+                        </div>
+                    ))
+                ) : (
+                  metrics?.map(metric => <DashboardCard key={metric.title} metric={{...metric, value: formatMetricValue(metric)}} />)
+                )}
+            </div>
+            <div>
+                <h3 className="text-lg font-semibold text-secondary mb-4">Staff on Duty</h3>
+                {staffLoading ? (
+                    <div className="text-center p-8 bg-white rounded-lg border">Loading staff...</div>
+                ) : (
+                    <Table data={staff || []} columns={staffColumns} />
+                )}
+            </div>
         </div>
     );
 };
@@ -688,7 +731,7 @@ const RequisitionModal: React.FC<{
     };
 
     return (
-        <Modal isOpen={true} onClose={onClose} title="Request Ingredients">
+        <Modal isOpen={true} onClose={onClose} title="Raise New Indent">
             <form onSubmit={handleSubmit}>
                 <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
                     {items.map((item, index) => (
@@ -731,7 +774,7 @@ const RequisitionModal: React.FC<{
                 </div>
                  <div className="p-4 bg-slate-50 rounded-b-lg flex justify-end space-x-2">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Send Request</Button>
+                    <Button type="submit">Submit Indent</Button>
                 </div>
             </form>
         </Modal>
@@ -795,7 +838,7 @@ const ChefDashboard: React.FC = () => {
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
-        if (params.get('request-ingredients') === 'true') {
+        if (params.get('raise-indent') === 'true') {
             setIsRequisitionModalOpen(true);
         }
     }, [location.search]);
@@ -826,19 +869,18 @@ const ChefDashboard: React.FC = () => {
     
     const readyKots = allKots.filter(k => k.items.length > 0 && k.items.every(i => i.status === KotStatus.Ready));
     
-    // An active KOT is one that isn't fully ready and hasn't been cancelled out
     const activeKots = allKots.filter(k => k.items.length > 0 && !readyKots.some(rk => rk.id === k.id));
 
+    // A KOT is 'New' if ALL its items are 'New'.
     const newKots = activeKots.filter(k => k.items.every(i => i.status === KotStatus.New));
     
-    // A preparing KOT has at least one item being prepared, and no items are new.
-    const preparingKots = activeKots.filter(k => 
-        !newKots.some(nk => nk.id === k.id) &&
-        k.items.some(i => i.status === KotStatus.Preparing)
-    );
+    // A KOT is 'Preparing' if at least one item is 'Preparing' and no items are 'New'.
+    // BUG FIX: The KOT should be 'Preparing' if ANY item is preparing, OR some are ready and some are preparing. It is NOT new and NOT fully ready.
+    const preparingKots = activeKots.filter(k => !newKots.some(nk => nk.id === k.id));
 
     const takeawayKots = activeKots.filter(k => k.orderType === OrderType.Takeaway);
     const dineInNewKots = newKots.filter(k => k.orderType === OrderType.DineIn);
+    // BUG FIX: The preparing KOTs for dine-in should be filtered from the corrected `preparingKots` list.
     const dineInPreparingKots = preparingKots.filter(k => k.orderType === OrderType.DineIn);
 
 
@@ -847,9 +889,9 @@ const ChefDashboard: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end sr-only">
                 <Button onClick={() => setIsRequisitionModalOpen(true)} leftIcon={<PlusIcon className="w-5 h-5"/>}>
-                    Request Ingredients
+                    Raise Indent
                 </Button>
             </div>
             <div className="flex h-full space-x-4 overflow-x-auto pb-4">
@@ -906,6 +948,10 @@ const Dashboard: React.FC = () => {
 
   if (user.role === UserRole.Chef) {
     return <ChefDashboard />;
+  }
+  
+  if (user.role === UserRole.Manager) {
+      return <ManagerDashboard />;
   }
 
   if (!selectedOutlet) {

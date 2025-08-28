@@ -173,6 +173,25 @@ export const EllipsisVerticalIcon: React.FC<React.SVGProps<SVGSVGElement>> = (pr
 
 export const LightBulbIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a7.5 7.5 0 01-7.5 0c-1.255 0-2.42-.157-3.548-.437m14.596 0c-1.128.28-2.293.437-3.548.437a7.5 7.5 0 01-7.5 0m14.596 0A11.956 11.956 0 0012 10.5c-2.998 0-5.74-1.1-7.8-2.922m15.6 0A11.953 11.953 0 0012 10.5c-2.998 0-5.74-1.1-7.8-2.922m7.8-3.75a.75.75 0 01.75.75v.01c0 .414-.336.75-.75.75a.75.75 0 01-.75-.75v-.01c0-.414.336-.75.75-.75z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a7.5 7.5 0 01-7.5 0c-1.255 0-2.42-.157-3.548-.437m14.596 0c-1.128.28-2.293.437-3.548.437a7.5 7.5 0 01-7.5 0m14.596 0A11.956 11.956 0 0012 10.5c-2.998 0-5.74-1.1-7.8-2.922m15.6 0A11.953 11.953 0 0012 10.5c-2.998 0-5.74-1.1-7.8-2.922m7.8-3.75a.75.75 0 01.75.75v.01c0 .414-.336.75-.75.75a.75.75 0 01-.75-.75v-.01c0-.414.336-.75.75.75z" />
+    </svg>
+);
+
+export const ArchiveBoxXMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9l-4.5 4.5m0-4.5l4.5 4.5" />
+    </svg>
+);
+
+export const DocumentMagnifyingGlassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5 4.5l-1.5-1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+export const MapIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h1.5m-1.5 0H5.25m0 0H3.75m1.5-1.5H5.25m0 0H3.75m1.5-1.5H5.25m0 0H3.75m9 3.75l-1.5-1.5m0 0l-1.5 1.5m-1.5-1.5l1.5 1.5m1.5-1.5l-1.5 1.5M15 12l-1.5 1.5m0 0l-1.5-1.5m1.5 1.5l1.5-1.5m-1.5 1.5l-1.5-1.5m9-3.75l-1.5-1.5m0 0l-1.5 1.5m-1.5-1.5l1.5 1.5m1.5-1.5l-1.5 1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 );
