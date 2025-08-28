@@ -215,6 +215,7 @@ const TableManagementModal: React.FC<{
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
     const [covers, setCovers] = useState(1);
     const [newlyAddedItems, setNewlyAddedItems] = useState<CustomerOrderItem[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     const isCoversInvalid = covers <= 0 || covers > table.capacity;
 
@@ -257,8 +258,10 @@ const TableManagementModal: React.FC<{
 
     const elapsedTime = useElapsedTime(table.seatedAt);
     const newItemsTotal = newlyAddedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
     const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+
+    const menuCategories = ['All', ...new Set(menuItems?.map(item => item.category) || [])];
+    const filteredMenuItems = menuItems?.filter(item => selectedCategory === 'All' || item.category === selectedCategory);
 
     return (
         <Modal isOpen={true} onClose={onClose} title={`${table.name} - Management`}>
@@ -287,34 +290,34 @@ const TableManagementModal: React.FC<{
                     </div>
                 </div>
             ) : (
-                <div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 max-h-[70vh]">
+                <div className="flex flex-col h-[85vh] md:h-auto md:max-h-[80vh]">
+                    <div className="flex-grow overflow-y-auto md:grid md:grid-cols-2">
                         {/* Left Side: Order Summary */}
-                        <div className="p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
+                        <div className="p-4 md:p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
                             <div className="flex justify-between items-baseline mb-4">
                                 <h3 className="font-semibold text-lg text-secondary">Current Order</h3>
                                 <span className="font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded">{elapsedTime}</span>
                             </div>
-                            <div className="flex-grow overflow-y-auto">
+                            <div className="flex-grow overflow-y-auto pr-2 -mr-2">
                                 {orderLoading ? <p>Loading order...</p> : (
                                 <>
                                     <ul className="divide-y divide-slate-200">
                                         {orderResult?.items.map((item, index) => (
-                                            <li key={`${item.id}-${index}`} className="py-2 flex justify-between items-center">
+                                            <li key={`${item.id}-${index}`} className="py-3 flex justify-between items-center">
                                                 <div>
-                                                    <p className="font-medium text-slate-800">{item.name}</p>
+                                                    <p className="font-medium text-slate-800 text-base">{item.name}</p>
                                                     <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
                                                 </div>
-                                                <p className="font-semibold text-secondary">{formatCurrency(item.price * item.quantity)}</p>
+                                                <p className="font-semibold text-secondary text-base">{formatCurrency(item.price * item.quantity)}</p>
                                             </li>
                                         ))}
                                     </ul>
                                     <div className="mt-4 pt-4 border-t">
-                                        <h4 className="font-semibold text-secondary">New Items to Send</h4>
+                                        <h4 className="font-semibold text-secondary text-base">New Items to Send</h4>
                                         {newlyAddedItems.length > 0 ? (
                                             <ul className="divide-y divide-slate-100">
                                                 {newlyAddedItems.map(item => (
-                                                    <li key={item.id} className="py-1 flex justify-between">
+                                                    <li key={item.id} className="py-2 flex justify-between text-base">
                                                         <span>{item.name} (x{item.quantity})</span>
                                                         <span>{formatCurrency(item.price * item.quantity)}</span>
                                                     </li>
@@ -325,24 +328,39 @@ const TableManagementModal: React.FC<{
                                 </>
                                 )}
                             </div>
-                            <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-lg text-primary">
+                            <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-xl text-primary">
                                 <span>Total</span>
                                 <span>{formatCurrency((orderResult?.total || 0) + newItemsTotal)}</span>
                             </div>
                         </div>
                         {/* Right Side: Menu */}
-                        <div className="p-6 flex flex-col">
+                        <div className="p-4 md:p-6 flex flex-col">
                             <h3 className="font-semibold text-lg text-secondary mb-4">Add to Order</h3>
+                            <div className="mb-4">
+                                <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
+                                    {menuCategories.map(category => (
+                                        <Button
+                                            key={category}
+                                            size="sm"
+                                            onClick={() => setSelectedCategory(category)}
+                                            variant={selectedCategory === category ? 'primary' : 'secondary'}
+                                            className={`flex-shrink-0 ${selectedCategory !== category && 'bg-white'}`}
+                                        >
+                                            {category}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
                             {menuLoading ? <p>Loading menu...</p> : (
-                            <div className="flex-grow overflow-y-auto">
+                            <div className="flex-grow overflow-y-auto -mr-4 pr-4">
                                 <ul className="divide-y divide-slate-200">
-                                    {menuItems?.map(item => (
-                                        <li key={item.id} className="py-2 flex justify-between items-center">
+                                    {filteredMenuItems?.map(item => (
+                                        <li key={item.id} className="py-3 flex justify-between items-center">
                                             <div>
-                                                <p className="font-medium text-slate-800">{item.name}</p>
+                                                <p className="font-medium text-slate-800 text-base">{item.name}</p>
                                                 <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
                                             </div>
-                                            <Button size="sm" onClick={() => handleAddItem(item)}>Add</Button>
+                                            <Button size="md" onClick={() => handleAddItem(item)}>Add</Button>
                                         </li>
                                     ))}
                                 </ul>
@@ -350,20 +368,22 @@ const TableManagementModal: React.FC<{
                             )}
                         </div>
                     </div>
-                     <div className="p-4 bg-slate-50 rounded-b-lg flex justify-between items-center">
-                        <div>
-                            <Button variant="danger" onClick={handleFinalizeBill}>Finalize Bill & Clear Table</Button>
-                        </div>
-                        <div className="space-x-2">
-                            <Button variant="secondary" onClick={onClose}>Cancel</Button>
-                            <Button 
-                                variant="primary" 
-                                onClick={handleSendToKitchen} 
-                                disabled={newlyAddedItems.length === 0}
-                            >
-                                Send Order to Kitchen
-                            </Button>
-                        </div>
+                     <div className="flex-shrink-0 p-4 bg-slate-100 border-t border-slate-200 flex justify-between items-center sticky bottom-0">
+                        <Button variant="danger" size="md" onClick={handleFinalizeBill} className="py-3">Finalize Bill</Button>
+                        <Button 
+                            variant="primary" 
+                            size="md"
+                            onClick={handleSendToKitchen} 
+                            disabled={newlyAddedItems.length === 0}
+                            className="relative py-3"
+                        >
+                            Send to Kitchen
+                            {newlyAddedItems.length > 0 && (
+                                <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-700 text-white text-xs font-bold">
+                                    {newlyAddedItems.length}
+                                </span>
+                            )}
+                        </Button>
                     </div>
                 </div>
             )}
@@ -377,6 +397,7 @@ const TakeawayModal: React.FC<{
 }> = ({ onClose, outletId }) => {
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
     const [newlyAddedItems, setNewlyAddedItems] = useState<CustomerOrderItem[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('All');
     
     const handleAddItem = (item: MenuItem) => {
         setNewlyAddedItems(prev => {
@@ -398,53 +419,80 @@ const TakeawayModal: React.FC<{
     const newItemsTotal = newlyAddedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 
+    const menuCategories = ['All', ...new Set(menuItems?.map(item => item.category) || [])];
+    const filteredMenuItems = menuItems?.filter(item => selectedCategory === 'All' || item.category === selectedCategory);
 
     return (
         <Modal isOpen={true} onClose={onClose} title="New Takeaway Order">
-            <div className="grid grid-cols-1 md:grid-cols-2 max-h-[70vh]">
-                <div className="p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
-                    <h3 className="font-semibold text-lg text-secondary mb-4">Order Items</h3>
-                    <div className="flex-grow overflow-y-auto">
-                        {newlyAddedItems.length > 0 ? (
-                            <ul className="divide-y divide-slate-100">
-                                {newlyAddedItems.map(item => (
-                                    <li key={item.id} className="py-2 flex justify-between">
-                                        <span>{item.name} (x{item.quantity})</span>
-                                        <span>{formatCurrency(item.price * item.quantity)}</span>
+            <div className="flex flex-col h-[85vh] md:h-auto md:max-h-[80vh]">
+                <div className="flex-grow overflow-y-auto md:grid md:grid-cols-2">
+                    <div className="p-4 md:p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
+                        <h3 className="font-semibold text-lg text-secondary mb-4">Order Items</h3>
+                        <div className="flex-grow overflow-y-auto">
+                            {newlyAddedItems.length > 0 ? (
+                                <ul className="divide-y divide-slate-100">
+                                    {newlyAddedItems.map(item => (
+                                        <li key={item.id} className="py-2 flex justify-between text-base">
+                                            <span>{item.name} (x{item.quantity})</span>
+                                            <span>{formatCurrency(item.price * item.quantity)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : <p className="text-sm text-slate-500 text-center py-4">No items added.</p>}
+                        </div>
+                        <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-xl text-primary">
+                            <span>Total</span>
+                            <span>{formatCurrency(newItemsTotal)}</span>
+                        </div>
+                    </div>
+                    <div className="p-4 md:p-6 flex flex-col">
+                         <h3 className="font-semibold text-lg text-secondary mb-4">Menu</h3>
+                        <div className="mb-4">
+                            <div className="flex space-x-2 overflow-x-auto pb-2 -mx-4 px-4">
+                                {menuCategories.map(category => (
+                                    <Button
+                                        key={category}
+                                        size="sm"
+                                        onClick={() => setSelectedCategory(category)}
+                                        variant={selectedCategory === category ? 'primary' : 'secondary'}
+                                        className={`flex-shrink-0 ${selectedCategory !== category && 'bg-white'}`}
+                                    >
+                                        {category}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                        {menuLoading ? <p>Loading menu...</p> : (
+                        <div className="flex-grow overflow-y-auto -mr-4 pr-4">
+                            <ul className="divide-y divide-slate-200">
+                                {filteredMenuItems?.map(item => (
+                                    <li key={item.id} className="py-3 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium text-slate-800 text-base">{item.name}</p>
+                                            <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
+                                        </div>
+                                        <Button size="md" onClick={() => handleAddItem(item)}>Add</Button>
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p className="text-sm text-slate-500 text-center py-4">No items added.</p>}
-                    </div>
-                    <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-lg text-primary">
-                        <span>Total</span>
-                        <span>{formatCurrency(newItemsTotal)}</span>
+                        </div>
+                        )}
                     </div>
                 </div>
-                <div className="p-6 flex flex-col">
-                    <h3 className="font-semibold text-lg text-secondary mb-4">Menu</h3>
-                    {menuLoading ? <p>Loading menu...</p> : (
-                    <div className="flex-grow overflow-y-auto">
-                        <ul className="divide-y divide-slate-200">
-                            {menuItems?.map(item => (
-                                <li key={item.id} className="py-2 flex justify-between items-center">
-                                    <div>
-                                        <p className="font-medium text-slate-800">{item.name}</p>
-                                        <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
-                                    </div>
-                                    <Button size="sm" onClick={() => handleAddItem(item)}>Add</Button>
-                                </li>
-                            ))}
-                        </ul>
+                <div className="flex-shrink-0 p-4 bg-slate-100 border-t border-slate-200 flex justify-end items-center sticky bottom-0">
+                    <div className="space-x-2">
+                        <Button variant="secondary" size="md" onClick={onClose} className="py-3">Cancel</Button>
+                        <Button 
+                            variant="primary" 
+                            size="md"
+                            onClick={handleSendToKitchen} 
+                            disabled={newlyAddedItems.length === 0}
+                            className="py-3"
+                        >
+                            Send to Kitchen
+                        </Button>
                     </div>
-                    )}
                 </div>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-b-lg flex justify-end space-x-2">
-                <Button variant="secondary" onClick={onClose}>Cancel</Button>
-                <Button variant="primary" onClick={handleSendToKitchen} disabled={newlyAddedItems.length === 0}>
-                    Send to Kitchen
-                </Button>
             </div>
         </Modal>
     );
