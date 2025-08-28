@@ -1,112 +1,111 @@
-import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType } from '../types';
+import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem } from '../types';
 
 // --- MOCK DATABASE ---
 
 let mockUsers: User[] = [
-  { id: 'user-1', name: 'Ana Johnson', email: 'owner@halfplate.com', role: UserRole.RestaurantOwner, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Overall P&L', 'Expansion Strategy'] },
+  { id: 'user-1', name: 'Priya Singh', email: 'owner@halfplate.com', role: UserRole.RestaurantOwner, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Overall P&L', 'Expansion Strategy'] },
   { id: 'user-2', name: 'System Admin', email: 'admin@halfplate.com', role: UserRole.Admin, outletIds: ['outlet-1', 'outlet-2', 'outlet-3', 'outlet-4', 'hq-1'], kras: ['System Uptime', 'User Management'] },
-  { id: 'user-3', name: 'Marco Pierre', email: 'chef@halfplate.com', role: UserRole.Chef, outletIds: ['outlet-1'], kras: ['Menu Innovation', 'Kitchen Food Cost'] },
-  { id: 'user-4', name: 'Sam Carter', email: 'store.manager@halfplate.com', role: UserRole.StoreManager, outletIds: ['outlet-1', 'outlet-2'], kras: ['Inventory Accuracy', 'Stock Rotation'] },
-  { id: 'user-5', name: 'Penny Lane', email: 'procurement@halfplate.com', role: UserRole.Procurement, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Vendor Negotiation', 'Purchase Order Accuracy'] },
-  { id: 'user-6', name: 'Chris P. Bacon', email: 'waiter@halfplate.com', role: UserRole.Waiter, outletIds: ['outlet-1'], kras: ['Guest Satisfaction', 'Upselling'] },
+  { id: 'user-3', name: 'Sanjeev Kapoor', email: 'chef@halfplate.com', role: UserRole.Chef, outletIds: ['outlet-1'], kras: ['Menu Innovation', 'Kitchen Food Cost'] },
+  { id: 'user-4', name: 'Rajesh Kumar', email: 'store.manager@halfplate.com', role: UserRole.StoreManager, outletIds: ['outlet-1', 'outlet-2'], kras: ['Inventory Accuracy', 'Stock Rotation'] },
+  { id: 'user-5', name: 'Meera Desai', email: 'procurement@halfplate.com', role: UserRole.Procurement, outletIds: ['outlet-1', 'outlet-2', 'outlet-3'], kras: ['Vendor Negotiation', 'Purchase Order Accuracy'] },
+  { id: 'user-6', name: 'Arjun Sharma', email: 'waiter@halfplate.com', role: UserRole.Waiter, outletIds: ['outlet-1'], kras: ['Guest Satisfaction', 'Upselling'] },
 ];
 
 let mockVendors: Vendor[] = [
-    { id: 'ven-1', name: 'Fresh Veggies Co.', contactPerson: 'Mark Green', email: 'mark@freshveg.com', phone: '555-0101', status: VendorStatus.Active, performanceRating: VendorPerformance.Excellent },
-    { id: 'ven-2', name: 'Prime Meats', contactPerson: 'Susan Beeford', email: 'susan@primemeats.com', phone: '555-0102', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
-    { id: 'ven-3', name: 'Dairy Best', contactPerson: 'Charles Cheese', email: 'charles@dairybest.com', phone: '555-0103', status: VendorStatus.Inactive, performanceRating: VendorPerformance.Average },
-    { id: 'ven-4', name: 'Bakery World', contactPerson: 'Brenda Breadson', email: 'brenda@bakery.com', phone: '555-0104', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
+    { id: 'ven-1', name: 'Sabzi Mandi Suppliers', contactPerson: 'Vikram Patel', email: 'vikram@sabzisuppliers.in', phone: '+91 98765 43210', status: VendorStatus.Active, performanceRating: VendorPerformance.Excellent },
+    { id: 'ven-2', name: 'Quality Meats Delhi', contactPerson: 'Aisha Khan', email: 'aisha@qualitymeats.in', phone: '+91 98765 43211', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
+    { id: 'ven-3', name: 'Amul Dairy Distributors', contactPerson: 'Rohan Mehta', email: 'rohan@amuldist.in', phone: '+91 98765 43212', status: VendorStatus.Inactive, performanceRating: VendorPerformance.Average },
+    { id: 'ven-4', name: 'Modern Bakery Mumbai', contactPerson: 'Sunita Rao', email: 'sunita@modernbakery.in', phone: '+91 98765 43213', status: VendorStatus.Active, performanceRating: VendorPerformance.Good },
 ];
 
 const mockOutlets: Outlet[] = [
-    { id: 'hq-1', name: 'Halfplate Group HQ', location: 'Corporate Office', manager: 'CEO', parentId: null },
-    { id: 'outlet-1', name: 'Downtown Bistro', location: '123 Main St, Cityville', manager: 'John Doe', parentId: 'hq-1' },
-    { id: 'outlet-2', name: 'Uptown Cafe', location: '456 Oak Ave, Cityville', manager: 'Jane Smith', parentId: 'hq-1' },
-    { id: 'outlet-3', name: 'Seaside Grill', location: '789 Beach Blvd, Beachtown', manager: 'Mike Ross', parentId: 'hq-1' },
-    { id: 'outlet-4', name: 'Test Kitchen', location: 'Innovation Park', manager: 'Dr. Rene', parentId: 'outlet-1' },
+    { id: 'hq-1', name: 'Halfplate Group HQ', location: 'Mumbai', manager: 'CEO', parentId: null },
+    { id: 'outlet-1', name: 'Koramangala Kitchen', location: 'Bengaluru', manager: 'Anjali Sharma', parentId: 'hq-1' },
+    { id: 'outlet-2', name: 'Bandra Cafe', location: 'Mumbai', manager: 'Rohan Verma', parentId: 'hq-1' },
+    { id: 'outlet-3', name: 'Cyber Hub Grill', location: 'Gurugram', manager: 'Siddharth Singh', parentId: 'hq-1' },
+    { id: 'outlet-4', name: 'Innovation Kitchen', location: 'Pune', manager: 'Dr. Kavita Iyer', parentId: 'outlet-1' },
 ];
 
 let mockKitchens: Kitchen[] = [
     { id: 'kit-1', name: 'Main Kitchen', outletId: 'outlet-1'},
-    { id: 'kit-2', name: 'Pastry Kitchen', outletId: 'outlet-1'},
-    { id: 'kit-3', name: 'Uptown Main', outletId: 'outlet-2'},
+    { id: 'kit-2', name: 'Tandoor Section', outletId: 'outlet-1'},
+    { id: 'kit-3', name: 'Bandra Main Kitchen', outletId: 'outlet-2'},
 ];
 
 let mockFloors: Floor[] = [
     { id: 'floor-1', name: 'Ground Floor', outletId: 'outlet-1'},
-    { id: 'floor-2', name: 'Patio', outletId: 'outlet-1'},
-    { id: 'floor-3', name: 'Main Dining', outletId: 'outlet-2'},
+    { id: 'floor-2', name: 'Rooftop Seating', outletId: 'outlet-1'},
+    { id: 'floor-3', name: 'Main Dining Hall', outletId: 'outlet-2'},
 ];
 
 let mockStaff: StaffMember[] = [
     // Outlet 1
-    { id: 'staff-1', outletId: 'outlet-1', name: 'Alice', role: StaffRole.Manager, salary: 60000, attendance: 98 },
-    { id: 'staff-2', outletId: 'outlet-1', name: 'Bob', role: StaffRole.Chef, salary: 52000, attendance: 95 },
-    { id: 'staff-3', outletId: 'outlet-1', name: 'Charlie', role: StaffRole.Waiter, salary: 35000, attendance: 99 },
+    { id: 'staff-1', outletId: 'outlet-1', name: 'Alok Nath', role: StaffRole.Manager, salary: 1200000, attendance: 98 },
+    { id: 'staff-2', outletId: 'outlet-1', name: 'Ravi Kumar', role: StaffRole.Chef, salary: 900000, attendance: 95 },
+    { id: 'staff-3', outletId: 'outlet-1', name: 'Suresh Pillai', role: StaffRole.Waiter, salary: 480000, attendance: 99 },
     // Outlet 2
-    { id: 'staff-4', outletId: 'outlet-2', name: 'Diana', role: StaffRole.Manager, salary: 62000, attendance: 97 },
-    { id: 'staff-5', outletId: 'outlet-2', name: 'Eve', role: StaffRole.Chef, salary: 54000, attendance: 96 },
+    { id: 'staff-4', outletId: 'outlet-2', name: 'Deepika Sharma', role: StaffRole.Manager, salary: 1300000, attendance: 97 },
+    { id: 'staff-5', outletId: 'outlet-2', name: 'Isha Gupta', role: StaffRole.Chef, salary: 950000, attendance: 96 },
 ];
 
 const mockOrders: Order[] = [
   // Outlet 1
-  { id: 'PO-001', outletId: 'outlet-1', vendor: 'Fresh Veggies Co.', date: '2023-10-26', itemCount: 12, total: 450.75, status: OrderStatus.Delivered },
-  { id: 'PO-002', outletId: 'outlet-1', vendor: 'Prime Meats', date: '2023-10-25', itemCount: 5, total: 1250.00, status: OrderStatus.Approved },
+  { id: 'PO-001', outletId: 'outlet-1', vendor: 'Sabzi Mandi Suppliers', date: '2023-10-26', itemCount: 12, total: 12500, status: OrderStatus.Delivered },
+  { id: 'PO-002', outletId: 'outlet-1', vendor: 'Quality Meats Delhi', date: '2023-10-25', itemCount: 5, total: 35000, status: OrderStatus.Approved },
   // Outlet 2
-  { id: 'PO-003', outletId: 'outlet-2', vendor: 'Dairy Best', date: '2023-10-25', itemCount: 8, total: 320.50, status: OrderStatus.PendingApproval },
-  { id: 'PO-004', outletId: 'outlet-2', vendor: 'Bakery World', date: '2023-10-24', itemCount: 20, total: 600.00, status: OrderStatus.Delivered },
+  { id: 'PO-003', outletId: 'outlet-2', vendor: 'Amul Dairy Distributors', date: '2023-10-25', itemCount: 8, total: 8500, status: OrderStatus.PendingApproval },
+  { id: 'PO-004', outletId: 'outlet-2', vendor: 'Modern Bakery Mumbai', date: '2023-10-24', itemCount: 20, total: 15000, status: OrderStatus.Delivered },
   // Outlet 3
-  { id: 'PO-005', outletId: 'outlet-3', vendor: 'Fresh Veggies Co.', date: '2023-10-23', itemCount: 10, total: 410.20, status: OrderStatus.Cancelled },
+  { id: 'PO-005', outletId: 'outlet-3', vendor: 'Sabzi Mandi Suppliers', date: '2023-10-23', itemCount: 10, total: 11200, status: OrderStatus.Cancelled },
 ];
 
 const mockInventory: InventoryItem[] = [
   // Outlet 1
   { id: 'INV-101', outletId: 'outlet-1', name: 'Tomatoes', sku: 'VEG-TOM', category: 'Vegetables', stock: 18, par: 40, unit: 'kg' },
-  { id: 'INV-102', outletId: 'outlet-1', name: 'Chicken Breast', sku: 'MEA-CHI', category: 'Meat', stock: 10, par: 30, unit: 'kg' },
-  { id: 'INV-106', outletId: 'outlet-1', name: 'Lettuce', sku: 'VEG-LET', category: 'Vegetables', stock: 30, par: 25, unit: 'heads' },
+  { id: 'INV-102', outletId: 'outlet-1', name: 'Chicken Tikka Cut', sku: 'MEA-CHI', category: 'Meat', stock: 10, par: 30, unit: 'kg' },
+  { id: 'INV-106', outletId: 'outlet-1', name: 'Paneer', sku: 'DAI-PAN', category: 'Dairy', stock: 8, par: 20, unit: 'kg' },
 
   // Outlet 2
-  { id: 'INV-103', outletId: 'outlet-2', name: 'Milk', sku: 'DAI-MIL', category: 'Dairy', stock: 5, par: 20, unit: 'L' },
-  { id: 'INV-104', outletId: 'outlet-2', name: 'All-Purpose Flour', sku: 'DRY-FLR', category: 'Dry Goods', stock: 80, par: 50, unit: 'kg' },
+  { id: 'INV-103', outletId: 'outlet-2', name: 'Amul Milk', sku: 'DAI-MIL', category: 'Dairy', stock: 5, par: 20, unit: 'L' },
+  { id: 'INV-104', outletId: 'outlet-2', name: 'Basmati Rice', sku: 'DRY-RIC', category: 'Dry Goods', stock: 80, par: 50, unit: 'kg' },
   // Outlet 3
-  { id: 'INV-105', outletId: 'outlet-3', name: 'Olive Oil', sku: 'OIL-OLI', category: 'Oils', stock: 10, par: 12, unit: 'L' },
+  { id: 'INV-105', outletId: 'outlet-3', name: 'Mustard Oil', sku: 'OIL-MUS', category: 'Oils', stock: 10, par: 12, unit: 'L' },
 ];
 
-const mockRequisitions: Requisition[] = [
-    { id: 'REQ-001', outletId: 'outlet-1', department: Department.Kitchen, requestedBy: 'Marco Pierre', date: '2023-10-27', itemCount: 3, status: RequisitionStatus.Pending },
-    { id: 'REQ-002', outletId: 'outlet-1', department: Department.Bar, requestedBy: 'Leo Robitschek', date: '2023-10-27', itemCount: 2, status: RequisitionStatus.Pending },
-    { id: 'REQ-003', outletId: 'outlet-2', department: Department.Kitchen, requestedBy: 'Jane Smith', date: '2023-10-26', itemCount: 5, status: RequisitionStatus.Fulfilled },
-    { id: 'REQ-004', outletId: 'outlet-1', department: Department.Kitchen, requestedBy: 'Marco Pierre', date: '2023-10-25', itemCount: 4, status: RequisitionStatus.Fulfilled },
+let mockRequisitions: Requisition[] = [
+    { id: 'REQ-001', outletId: 'outlet-1', department: Department.Kitchen, requestedBy: 'Sanjeev Kapoor', date: '2023-10-27', items: [{name: 'Tomatoes', quantity: 10, unit: 'kg'}, {name: 'Paneer', quantity: 5, unit: 'kg'}], status: RequisitionStatus.Pending },
+    { id: 'REQ-002', outletId: 'outlet-1', department: Department.Bar, requestedBy: 'Amit Sood', date: '2023-10-27', items: [{name: 'Lemons', quantity: 2, unit: 'kg'}, {name: 'Mint', quantity: 5, unit: 'bunch'}], status: RequisitionStatus.Pending },
+    { id: 'REQ-003', outletId: 'outlet-2', department: Department.Kitchen, requestedBy: 'Isha Gupta', date: '2023-10-26', items: [{name: 'Basmati Rice', quantity: 20, unit: 'kg'}], status: RequisitionStatus.Fulfilled },
 ]
 
 const mockRecipes: Recipe[] = [
-    { id: 'REC-01', name: 'Classic Margherita Pizza', category: 'Main Course', costPerPortion: 2.85, targetMargin: 70, ingredients: [] },
-    { id: 'REC-02', name: 'Chicken Alfredo Pasta', category: 'Main Course', costPerPortion: 4.50, targetMargin: 65, ingredients: [] },
+    { id: 'REC-01', name: 'Paneer Butter Masala', category: 'Main Course', costPerPortion: 120, targetMargin: 70, ingredients: [] },
+    { id: 'REC-02', name: 'Chicken Biryani', category: 'Main Course', costPerPortion: 180, targetMargin: 65, ingredients: [] },
 ];
 
 const mockFinanceData: ThreeWayMatchItem[] = [
-    { id: 'FIN-001', outletId: 'outlet-1', poId: 'PO-001', grnId: 'GRN-001', invoiceId: 'INV-A01', vendor: 'Fresh Veggies Co.', amount: 450.75, date: '2023-10-26', status: MatchStatus.Matched },
-    { id: 'FIN-002', outletId: 'outlet-2', poId: 'PO-003', grnId: 'GRN-003', invoiceId: 'INV-C01', vendor: 'Dairy Best', amount: 310.00, date: '2023-10-25', status: MatchStatus.Mismatched },
-    { id: 'FIN-004', outletId: 'outlet-2', poId: 'PO-004', grnId: 'GRN-004', invoiceId: 'INV-D01', vendor: 'Bakery World', amount: 600.00, date: '2023-10-24', status: MatchStatus.Matched },
+    { id: 'FIN-001', outletId: 'outlet-1', poId: 'PO-001', grnId: 'GRN-001', invoiceId: 'INV-A01', vendor: 'Sabzi Mandi Suppliers', amount: 12500, date: '2023-10-26', status: MatchStatus.Matched },
+    { id: 'FIN-002', outletId: 'outlet-2', poId: 'PO-003', grnId: 'GRN-003', invoiceId: 'INV-C01', vendor: 'Amul Dairy Distributors', amount: 8200, date: '2023-10-25', status: MatchStatus.Mismatched },
+    { id: 'FIN-004', outletId: 'outlet-2', poId: 'PO-004', grnId: 'GRN-004', invoiceId: 'INV-D01', vendor: 'Modern Bakery Mumbai', amount: 15000, date: '2023-10-24', status: MatchStatus.Matched },
 ];
 
 const mockDashboardMetrics: {[key: string]: DashboardMetric[]} = {
     'outlet-1': [
-        { title: 'Daily Revenue', value: '$3,450', change: '12%', changeType: 'increase', description: 'vs yesterday' },
+        { title: "Today's Sales", value: '2,80,000', change: '12%', changeType: 'increase', description: 'vs yesterday' },
         { title: 'Food Cost %', value: '28.5%', change: '0.5%', changeType: 'increase', description: 'vs last month' },
-        { title: 'Average Check Size', value: '$45.50', change: '2.1%', changeType: 'increase', description: 'vs last week' },
+        { title: 'Average Bill Value', value: '3,500', change: '2.1%', changeType: 'increase', description: 'vs last week' },
         { title: 'Vendor OTIF', value: '96%', change: '1.2%', changeType: 'decrease', description: 'On-Time In-Full' },
     ],
     'outlet-2': [
-        { title: 'Daily Revenue', value: '$2,890', change: '8%', changeType: 'decrease', description: 'vs yesterday' },
+        { title: "Today's Sales", value: '1,95,000', change: '8%', changeType: 'decrease', description: 'vs yesterday' },
         { title: 'Food Cost %', value: '31.2%', change: '1.1%', changeType: 'increase', description: 'vs last month' },
-        { title: 'Average Check Size', value: '$38.20', change: '0.5%', changeType: 'decrease', description: 'vs last week' },
+        { title: 'Average Bill Value', value: '2,800', change: '0.5%', changeType: 'decrease', description: 'vs last week' },
         { title: 'Vendor OTIF', value: '92%', change: '0.8%', changeType: 'increase', description: 'On-Time In-Full' },
     ],
     'outlet-3': [
-        { title: 'Daily Revenue', value: '$4,120', change: '15%', changeType: 'increase', description: 'vs yesterday' },
+        { title: "Today's Sales", value: '3,50,000', change: '15%', changeType: 'increase', description: 'vs yesterday' },
         { title: 'Food Cost %', value: '29.8%', change: '0.3%', changeType: 'decrease', description: 'vs last month' },
-        { title: 'Average Check Size', value: '$52.80', change: '3.0%', changeType: 'increase', description: 'vs last week' },
+        { title: 'Average Bill Value', value: '4,100', change: '3.0%', changeType: 'increase', description: 'vs last week' },
         { title: 'Vendor OTIF', value: '98%', change: '0.5%', changeType: 'increase', description: 'On-Time In-Full' },
     ],
 };
@@ -116,13 +115,13 @@ const mockStoreManagerDashboardMetrics: {[key: string]: DashboardMetric[]} = {
         { title: 'Low Stock Items', value: '2', description: 'Items below 50% of par' },
         { title: 'Stock Turnover', value: '4.2', description: 'Rate for this month' },
         { title: 'Pending Requisitions', value: '2', description: 'From Kitchen & Bar' },
-        { title: 'Total Inventory Value', value: '$1,850', description: 'As of today' },
+        { title: 'Total Inventory Value', value: '1,50,000', description: 'As of today' },
     ],
     'outlet-2': [
         { title: 'Low Stock Items', value: '1', description: 'Items below 50% of par' },
         { title: 'Stock Turnover', value: '3.8', description: 'Rate for this month' },
         { title: 'Pending Requisitions', value: '0', description: 'All requests fulfilled' },
-        { title: 'Total Inventory Value', value: '$2,400', description: 'As of today' },
+        { title: 'Total Inventory Value', value: '2,10,000', description: 'As of today' },
     ]
 };
 
@@ -132,8 +131,8 @@ const generateSalesData = (days: number, scale: number) => {
         const date = new Date();
         date.setDate(date.getDate() - i);
         data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            sales: Math.floor(Math.random() * 2000 + 1500) * scale,
+            date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+            sales: Math.floor(Math.random() * 150000 + 100000) * scale,
         });
     }
     return data;
@@ -162,12 +161,12 @@ let mockCustomerOrders: CustomerOrder[] = [
 ];
 
 const mockMenuItems: MenuItem[] = [
-    { id: 'menu-1', name: 'Margherita Pizza', price: 14.00, category: 'Main' },
-    { id: 'menu-2', name: 'Chicken Alfredo', price: 18.50, category: 'Main' },
-    { id: 'menu-3', name: 'Caesar Salad', price: 12.00, category: 'Starter' },
-    { id: 'menu-4', name: 'Coke', price: 3.00, category: 'Drink' },
-    { id: 'menu-5', name: 'Iced Tea', price: 3.50, category: 'Drink' },
-    { id: 'menu-6', name: 'Tiramisu', price: 8.00, category: 'Dessert' },
+    { id: 'menu-1', name: 'Paneer Tikka', price: 350, category: 'Starters' },
+    { id: 'menu-2', name: 'Butter Chicken', price: 450, category: 'Mains' },
+    { id: 'menu-3', name: 'Dal Makhani', price: 300, category: 'Mains' },
+    { id: 'menu-4', name: 'Masala Coke', price: 120, category: 'Drinks' },
+    { id: 'menu-5', name: 'Garlic Naan', price: 80, category: 'Breads' },
+    { id: 'menu-6', name: 'Gulab Jamun', price: 150, category: 'Desserts' },
 ];
 
 let mockKots: KOT[] = [];
@@ -254,6 +253,19 @@ export const api = {
     getSalesData: (outletId: string, period: 'week' | 'month' | 'year') => simulateApiCall(mockSalesDataByOutlet[outletId]?.[period] || []),
     getStoreManagerDashboardMetrics: (outletId: string) => simulateApiCall(mockStoreManagerDashboardMetrics[outletId] || []),
     getRequisitions: (outletId: string) => simulateApiCall(mockRequisitions.filter(r => r.outletId === outletId)),
+    createRequisition: (outletId: string, department: Department, requestedBy: string, items: RequisitionItem[]) => {
+        const newRequisition: Requisition = {
+            id: `REQ-${Date.now()}`,
+            outletId,
+            department,
+            requestedBy,
+            items,
+            date: new Date().toISOString().split('T')[0],
+            status: RequisitionStatus.Pending,
+        };
+        mockRequisitions.unshift(newRequisition);
+        return simulateApiCall(newRequisition);
+    },
     getStaff: (outletId: string) => simulateApiCall(mockStaff.filter(s => s.outletId === outletId)),
     addStaff: (staffMember: Omit<StaffMember, 'id'>) => {
         const newStaff: StaffMember = { ...staffMember, id: `staff-${Date.now()}` };
@@ -297,7 +309,7 @@ export const api = {
             { title: 'Open Tables', value: openTables.toString(), description: 'Tables currently seated' },
             { title: 'Total Covers', value: totalCovers.toString(), description: 'Guests currently seated' },
             { title: 'Avg. Turn Time', value: '45m', description: 'Average table duration' },
-            { title: 'My Sales', value: `$${mySales.toFixed(2)}`, description: 'Total from your closed tables' },
+            { title: 'My Sales', value: mySales.toString(), description: 'Total from your closed tables' },
         ];
         return simulateApiCall(metrics);
     },
@@ -395,7 +407,7 @@ export const api = {
         return simulateApiCall(newKot);
     },
     getKots: (outletId: string) => {
-        const activeKots = mockKots.filter(kot => kot.items.some(item => item.status !== KotStatus.Ready));
+        const activeKots = mockKots.filter(kot => kot.outletId === outletId);
         return simulateApiCall(activeKots);
     },
     updateKotItemStatus: (kotId: string, itemIndex: number, status: KotStatus) => {
@@ -403,10 +415,13 @@ export const api = {
         if (kot && kot.items[itemIndex]) {
             kot.items[itemIndex].status = status;
             
-            if (status === KotStatus.Ready && kot.orderType === OrderType.DineIn && kot.tableId) {
-                const table = mockTables.find(t => t.id === kot.tableId);
-                if (table) {
-                    table.status = TableStatus.FoodReady;
+            if (kot.orderType === OrderType.DineIn && kot.tableId) {
+                const anyItemReady = kot.items.some(item => item.status === KotStatus.Ready);
+                if (anyItemReady) {
+                    const table = mockTables.find(t => t.id === kot.tableId);
+                    if (table) {
+                        table.status = TableStatus.FoodReady;
+                    }
                 }
             }
             return simulateApiCall(kot);

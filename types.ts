@@ -108,13 +108,19 @@ export enum RequisitionStatus {
     Cancelled = 'Cancelled'
 }
 
+export interface RequisitionItem {
+    name: string;
+    quantity: number;
+    unit: string;
+}
+
 export interface Requisition {
     id: string;
     outletId: string;
     department: Department;
     requestedBy: string;
     date: string;
-    itemCount: number;
+    items: RequisitionItem[];
     status: RequisitionStatus;
 }
 

@@ -4,12 +4,12 @@ import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import DashboardCard from '../components/DashboardCard';
 import Table, { Column } from '../components/Table';
-import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType } from '../types';
+import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType, RequisitionItem, Department, DashboardMetric } from '../types';
 import { useAuth } from '../auth/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, } from 'recharts';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import { PlusIcon } from '../components/icons/Icons';
+import { PlusIcon, TrashIcon } from '../components/icons/Icons';
 
 const getOrderStatusBadge = (status: OrderStatus) => {
   const baseClasses = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full';
@@ -32,6 +32,27 @@ const getRequisitionStatusBadge = (status: RequisitionStatus) => {
     return <span className={`${baseClasses} ${statusClasses[status]}`}>{status}</span>;
 };
 
+// FIX: Centralized metric value formatter to correctly handle currency vs. other units and fix type errors.
+const formatMetricValue = (metric: DashboardMetric): string => {
+    const { title, value } = metric;
+    const currencyMetrics = ["Today's Sales", "Average Bill Value", "Total Inventory Value", "My Sales"];
+    
+    if (currencyMetrics.includes(title)) {
+        // Remove commas for parsing and check if it's a valid number.
+        const numberValue = Number(String(value).replace(/,/g, ''));
+        if (!isNaN(numberValue)) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(numberValue);
+        }
+    }
+    // For non-currency values or values that fail parsing, return as string.
+    return String(value);
+};
+
+
 // --- START: Managerial Dashboards ---
 const SalesDashboard: React.FC = () => {
     const { selectedOutlet } = useAuth();
@@ -48,7 +69,7 @@ const SalesDashboard: React.FC = () => {
         { header: 'Status', accessor: (item: Order) => getOrderStatusBadge(item.status) },
     ];
 
-    const formatToINR = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    const formatToINR = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', notation: 'compact', compactDisplay: 'short' }).format(value);
 
     return (
         <div className="space-y-6">
@@ -62,7 +83,7 @@ const SalesDashboard: React.FC = () => {
                     </div>
                 ))
             ) : (
-              metrics?.map(metric => <DashboardCard key={metric.title} metric={metric} />)
+              metrics?.map(metric => <DashboardCard key={metric.title} metric={{...metric, value: formatMetricValue(metric)}} />)
             )}
           </div>
     
@@ -88,7 +109,7 @@ const SalesDashboard: React.FC = () => {
                 <LineChart data={salesData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} tickFormatter={(value) => `${formatToINR(value/1000)}k`}/>
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} tickFormatter={(value) => formatToINR(value)}/>
                   <Tooltip 
                     cursor={{stroke: '#4338ca', strokeWidth: 1, strokeDasharray: '3 3'}} 
                     contentStyle={{borderRadius: '0.5rem', borderColor: '#e2e8f0'}}
@@ -146,7 +167,7 @@ const StoreManagerDashboard: React.FC = () => {
                         </div>
                     ))
                 ) : (
-                  metrics?.map(metric => <DashboardCard key={metric.title} metric={metric} />)
+                  metrics?.map(metric => <DashboardCard key={metric.title} metric={{...metric, value: formatMetricValue(metric)}} />)
                 )}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -584,7 +605,7 @@ const WaiterDashboard: React.FC = () => {
         refetchTables();
         refetchMetrics();
     }
-
+    
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -597,7 +618,7 @@ const WaiterDashboard: React.FC = () => {
                         </div>
                     ))
                 ) : (
-                  metrics?.map(metric => <DashboardCard key={metric.title} metric={metric} />)
+                  metrics?.map(metric => <DashboardCard key={metric.title} metric={{...metric, value: formatMetricValue(metric)}} />)
                 )}
             </div>
 
@@ -623,6 +644,91 @@ const WaiterDashboard: React.FC = () => {
 // --- END: Waiter Dashboard ---
 
 // --- START: Chef Dashboard ---
+const RequisitionModal: React.FC<{
+    onClose: () => void;
+    onSubmit: () => void;
+}> = ({ onClose, onSubmit }) => {
+    const { user, selectedOutlet } = useAuth();
+    const [items, setItems] = useState<RequisitionItem[]>([{ name: '', quantity: 1, unit: 'kg' }]);
+    
+    const handleItemChange = (index: number, field: keyof RequisitionItem, value: string | number) => {
+        const newItems = [...items];
+        (newItems[index] as any)[field] = value;
+        setItems(newItems);
+    };
+
+    const addItem = () => {
+        setItems([...items, { name: '', quantity: 1, unit: 'kg' }]);
+    };
+
+    const removeItem = (index: number) => {
+        setItems(items.filter((_, i) => i !== index));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const validItems = items.filter(item => item.name.trim() !== '' && item.quantity > 0);
+        if (validItems.length === 0 || !selectedOutlet || !user) {
+            alert("Please add at least one valid item.");
+            return;
+        }
+        await api.createRequisition(selectedOutlet.id, Department.Kitchen, user.name, validItems);
+        onSubmit();
+        onClose();
+    };
+
+    return (
+        <Modal isOpen={true} onClose={onClose} title="Request Ingredients">
+            <form onSubmit={handleSubmit}>
+                <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+                    {items.map((item, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
+                            <input
+                                type="text"
+                                placeholder="Item Name"
+                                value={item.name}
+                                onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                                className="md:col-span-2 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                                required
+                            />
+                             <input
+                                type="number"
+                                placeholder="Quantity"
+                                value={item.quantity}
+                                min="1"
+                                onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))}
+                                className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                                required
+                            />
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="text"
+                                    placeholder="Unit (kg, L, etc)"
+                                    value={item.unit}
+                                    onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                                    className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                                    required
+                                />
+                                <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700 p-1">
+                                    <TrashIcon className="w-5 h-5"/>
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    <Button type="button" variant="secondary" size="sm" onClick={addItem} leftIcon={<PlusIcon className="w-4 h-4" />}>
+                        Add Another Item
+                    </Button>
+                </div>
+                 <div className="p-4 bg-slate-50 rounded-b-lg flex justify-end space-x-2">
+                    <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button type="submit">Send Request</Button>
+                </div>
+            </form>
+        </Modal>
+    );
+};
+
+
 const KotCard: React.FC<{ kot: KOT; onItemStatusChange: (kotId: string, itemIndex: number, status: KotStatus) => void; }> = ({ kot, onItemStatusChange }) => {
     const timeSince = useElapsedTime(kot.createdAt);
     
@@ -667,6 +773,7 @@ const KotCard: React.FC<{ kot: KOT; onItemStatusChange: (kotId: string, itemInde
 const ChefDashboard: React.FC = () => {
     const { selectedOutlet } = useAuth();
     const { data: kots, loading, error, refetch } = useApi(api.getKots, selectedOutlet?.id || '');
+    const [isRequisitionModalOpen, setIsRequisitionModalOpen] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -680,48 +787,63 @@ const ChefDashboard: React.FC = () => {
         refetch();
     };
     
-    const takeawayKots = kots?.filter(k => k.orderType === OrderType.Takeaway && k.items.some(i => i.status !== KotStatus.Ready)) || [];
-    const newKots = kots?.filter(k => k.orderType === OrderType.DineIn && k.items.every(i => i.status === KotStatus.New)) || [];
-    const preparingKots = kots?.filter(k => k.orderType === OrderType.DineIn && k.items.some(i => i.status === KotStatus.Preparing) && k.items.every(i => i.status !== KotStatus.Ready)) || [];
-    const readyKots = kots?.filter(k => k.items.every(i => i.status === KotStatus.Ready)) || []; // Only fully ready orders
+    const allKots = kots || [];
+    const readyKots = allKots.filter(k => k.items.length > 0 && k.items.every(i => i.status === KotStatus.Ready));
+    
+    const activeKots = allKots.filter(k => !readyKots.some(rk => rk.id === k.id));
+
+    const takeawayKots = activeKots.filter(k => k.orderType === OrderType.Takeaway);
+    const dineInKots = activeKots.filter(k => k.orderType === OrderType.DineIn);
+
+    const newKots = dineInKots.filter(k => k.items.every(i => i.status === KotStatus.New));
+    const preparingKots = dineInKots.filter(k => !newKots.some(nk => nk.id === k.id));
+
 
     if (loading && !kots) return <div className="text-center p-8">Loading Kitchen Orders...</div>;
     if (error) return <div className="text-center p-8 text-danger">Failed to load kitchen orders.</div>;
 
     return (
-        <div className="flex h-full space-x-4 overflow-x-auto pb-4">
-            {/* Takeaway Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-primary pb-2">Takeaway ({takeawayKots.length})</h3>
-                <div className="flex-grow overflow-y-auto">
-                    {takeawayKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                    {takeawayKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new takeaway orders.</p>}
+        <div className="space-y-4">
+            <div className="flex justify-end">
+                <Button onClick={() => setIsRequisitionModalOpen(true)} leftIcon={<PlusIcon className="w-5 h-5"/>}>
+                    Request Ingredients
+                </Button>
+            </div>
+            <div className="flex h-full space-x-4 overflow-x-auto pb-4">
+                {/* Takeaway Column */}
+                <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-primary pb-2">Takeaway ({takeawayKots.length})</h3>
+                    <div className="flex-grow overflow-y-auto">
+                        {takeawayKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {takeawayKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new takeaway orders.</p>}
+                    </div>
+                </div>
+                {/* New Column */}
+                <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({newKots.length})</h3>
+                    <div className="flex-grow overflow-y-auto">
+                        {newKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {newKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new dine-in orders.</p>}
+                    </div>
+                </div>
+                {/* Preparing Column */}
+                <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({preparingKots.length})</h3>
+                    <div className="flex-grow overflow-y-auto">
+                        {preparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {preparingKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders in preparation.</p>}
+                    </div>
+                </div>
+                {/* Ready Column */}
+                <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-green-500 pb-2">Ready for Pickup ({readyKots.length})</h3>
+                     <div className="flex-grow overflow-y-auto">
+                        {readyKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {readyKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders ready.</p>}
+                    </div>
                 </div>
             </div>
-            {/* New Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({newKots.length})</h3>
-                <div className="flex-grow overflow-y-auto">
-                    {newKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                    {newKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new dine-in orders.</p>}
-                </div>
-            </div>
-            {/* Preparing Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({preparingKots.length})</h3>
-                <div className="flex-grow overflow-y-auto">
-                    {preparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                    {preparingKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders in preparation.</p>}
-                </div>
-            </div>
-            {/* Ready Column */}
-            <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-green-500 pb-2">Ready for Pickup ({readyKots.length})</h3>
-                 <div className="flex-grow overflow-y-auto">
-                    {readyKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                    {readyKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders ready.</p>}
-                </div>
-            </div>
+            {isRequisitionModalOpen && <RequisitionModal onClose={() => setIsRequisitionModalOpen(false)} onSubmit={() => {}} />}
         </div>
     );
 };
