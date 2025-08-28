@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDownIcon, BellIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon } from './icons/Icons';
@@ -24,22 +25,22 @@ const OutletSelector: React.FC = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center space-x-2 p-2 rounded-md bg-neutral-100 hover:bg-neutral-200">
-        <ArrowsRightLeftIcon className="w-5 h-5 text-neutral-600" />
+      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center space-x-2 p-2 rounded-md bg-slate-100 hover:bg-slate-200">
+        <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600" />
         <div>
           <p className="font-semibold text-sm text-secondary">{selectedOutlet.name}</p>
         </div>
-        <ChevronDownIcon className={`w-5 h-5 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-neutral-200 z-10">
+        <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
           <div className="p-2">
-            <p className="px-2 py-1 text-xs font-semibold text-neutral-500">SELECT OUTLET</p>
+            <p className="px-2 py-1 text-xs font-semibold text-slate-500">SELECT OUTLET</p>
             {outlets.map(outlet => (
               <button 
                 key={outlet.id} 
                 onClick={() => { setSelectedOutlet(outlet); setIsOpen(false); }} 
-                className={`w-full text-left px-2 py-2 text-sm text-neutral-700 rounded-md ${selectedOutlet.id === outlet.id ? 'bg-primary-50 font-semibold' : 'hover:bg-neutral-100'}`}
+                className={`w-full text-left px-2 py-2 text-sm text-slate-700 rounded-md ${selectedOutlet.id === outlet.id ? 'bg-primary-50 font-semibold' : 'hover:bg-slate-100'}`}
               >
                 {outlet.name}
               </button>
@@ -100,14 +101,14 @@ const Header: React.FC = () => {
   if (!user) return null;
 
   return (
-    <header className="flex items-center justify-between h-20 px-6 md:px-8 bg-white border-b border-neutral-200">
+    <header className="flex items-center justify-between h-20 px-6 md:px-8 bg-white border-b border-slate-200">
       <div className="flex items-center space-x-4">
         <h2 className="text-2xl font-bold text-secondary">{getPageTitle()}</h2>
         <OutletSelector />
       </div>
       <div className="flex items-center space-x-6">
         <div className="relative" ref={notificationsRef}>
-          <button onClick={() => setNotificationsOpen(prev => !prev)} className="relative text-neutral-600 hover:text-primary">
+          <button onClick={() => setNotificationsOpen(prev => !prev)} className="relative text-slate-600 hover:text-primary">
             <BellIcon className="w-6 h-6" />
             {lowStockItems.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5">
@@ -118,7 +119,7 @@ const Header: React.FC = () => {
             )}
           </button>
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-neutral-200 z-10">
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
               <div className="p-3 border-b">
                 <h4 className="font-semibold text-secondary">Low Stock Alerts</h4>
               </div>
@@ -127,19 +128,19 @@ const Header: React.FC = () => {
                   lowStockItems.map(item => {
                     const outletName = outlets.find(o => o.id === item.outletId)?.name || 'Unknown Outlet';
                     return (
-                      <a href="#/inventory" onClick={() => setNotificationsOpen(false)} key={item.id} className="block p-3 hover:bg-neutral-100 border-b border-neutral-100">
-                        <p className="font-medium text-sm text-neutral-800">{item.name}</p>
-                        <p className="text-xs text-neutral-600">
+                      <a href="#/inventory" onClick={() => setNotificationsOpen(false)} key={item.id} className="block p-3 hover:bg-slate-100 border-b border-slate-100">
+                        <p className="font-medium text-sm text-slate-800">{item.name}</p>
+                        <p className="text-xs text-slate-600">
                           <span className="font-semibold">{outletName}</span>: <span className="text-danger font-bold">{item.stock}</span> / {item.par} {item.unit} left
                         </p>
                       </a>
                     )
                   })
                 ) : (
-                  <p className="p-4 text-sm text-neutral-500 text-center">No low stock items. Great job!</p>
+                  <p className="p-4 text-sm text-slate-500 text-center">No low stock items. Great job!</p>
                 )}
               </div>
-              <div className="p-2 bg-neutral-50 rounded-b-lg">
+              <div className="p-2 bg-slate-50 rounded-b-lg">
                 <a href="#/inventory" onClick={() => setNotificationsOpen(false)} className="block text-center text-sm font-medium text-primary hover:underline">View All Inventory</a>
               </div>
             </div>
@@ -147,21 +148,21 @@ const Header: React.FC = () => {
         </div>
         <div className="relative" ref={dropdownRef}>
           <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center space-x-2 text-left">
-            <UserCircleIcon className="w-10 h-10 text-neutral-400"/>
+            <UserCircleIcon className="w-10 h-10 text-slate-400"/>
             <div>
               <p className="font-semibold text-sm text-secondary">{user.name}</p>
-              <p className="text-xs text-neutral-600">{user.role}</p>
+              <p className="text-xs text-slate-600">{user.role}</p>
             </div>
-            <ChevronDownIcon className={`w-5 h-5 text-neutral-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-neutral-200 z-10">
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
               <div className="p-4 border-b">
                 <p className="font-semibold text-secondary">{user.name}</p>
-                <p className="text-sm text-neutral-600">{user.email}</p>
+                <p className="text-sm text-slate-600">{user.email}</p>
               </div>
               <div className="p-2 border-t">
-                 <a href="#/profile" className="flex w-full items-center px-2 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md">
+                 <a href="#/profile" className="flex w-full items-center px-2 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md">
                    <UserCircleIcon className="w-5 h-5 mr-2" /> My Profile
                  </a>
                  <button onClick={handleLogout} className="flex w-full items-center px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">

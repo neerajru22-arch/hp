@@ -1,3 +1,4 @@
+
 export enum OrderStatus {
   PendingApproval = 'Pending Approval',
   Approved = 'Approved',
@@ -10,7 +11,9 @@ export enum UserRole {
   Chef = 'Chef',
   Procurement = 'Procurement Manager',
   Vendor = 'Vendor',
-  Admin = 'Admin'
+  Admin = 'Admin',
+  StoreManager = 'Store Manager',
+  Waiter = 'Waiter'
 }
 
 export interface User {
@@ -87,7 +90,151 @@ export interface ThreeWayMatchItem {
 export interface DashboardMetric {
   title: string;
   value: string;
-  change: string;
-  changeType: 'increase' | 'decrease';
-  description: string;
+  change?: string;
+  changeType?: 'increase' | 'decrease';
+  description?: string;
+}
+
+export enum Department {
+    Kitchen = 'Kitchen',
+    Bar = 'Bar',
+    Housekeeping = 'Housekeeping'
+}
+
+export enum RequisitionStatus {
+    Pending = 'Pending',
+    Fulfilled = 'Fulfilled',
+    Cancelled = 'Cancelled'
+}
+
+export interface Requisition {
+    id: string;
+    outletId: string;
+    department: Department;
+    requestedBy: string;
+    date: string;
+    itemCount: number;
+    status: RequisitionStatus;
+}
+
+export enum StaffRole {
+    Waiter = 'Waiter',
+    Chef = 'Chef',
+    Accountant = 'Accountant',
+    Cleaner = 'Cleaner',
+    Manager = 'Manager'
+}
+
+export interface StaffMember {
+    id: string;
+    outletId: string;
+    name: string;
+    role: StaffRole;
+    salary: number;
+    attendance: number; // Percentage
+}
+
+export enum VendorStatus {
+    Active = 'Active',
+    Inactive = 'Inactive'
+}
+
+export enum VendorPerformance {
+    Excellent = 'Excellent',
+    Good = 'Good',
+    Average = 'Average',
+    Poor = 'Poor'
+}
+
+export interface Vendor {
+    id: string;
+    name: string;
+    contactPerson: string;
+    email: string;
+    phone: string;
+    status: VendorStatus;
+    performanceRating: VendorPerformance;
+}
+
+export enum TableStatus {
+    Available = 'Available',
+    Seated = 'Seated',
+    Ordered = 'Ordered',
+    NeedsAttention = 'Needs Attention',
+    FoodReady = 'Food Ready'
+}
+
+export interface Kitchen {
+    id: string;
+    name: string;
+    outletId: string;
+}
+
+export interface Floor {
+    id: string;
+    name: string;
+    outletId: string;
+}
+
+export interface Table {
+    id: string;
+    name: string;
+    capacity: number;
+    status: TableStatus;
+    orderId?: string;
+    assignedWaiterId: string;
+    seatedAt: number | null; // Timestamp when customers were seated
+    floorId: string;
+}
+
+export interface MenuItem {
+    id: string;
+    name: string;
+    price: number;
+    category: string;
+}
+
+export interface CustomerOrderItem {
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+}
+
+export interface CustomerOrder {
+    id: string;
+    tableId: string;
+    waiterId: string;
+    items: CustomerOrderItem[];
+    total: number;
+    status: 'Open' | 'Closed';
+    covers: number;
+}
+
+export enum KotStatus {
+    New = 'New',
+    Preparing = 'Preparing',
+    Ready = 'Ready for Pickup',
+}
+
+export interface KOTItem {
+    name: string;
+    quantity: number;
+    status: KotStatus;
+}
+
+export enum OrderType {
+    DineIn = 'Dine-In',
+    Takeaway = 'Takeaway',
+}
+
+export interface KOT {
+    id: string;
+    tableId?: string;
+    tableName?: string;
+    orderIdentifier: string; // e.g., Table Name or "Takeaway #123"
+    items: KOTItem[];
+    createdAt: number; // Timestamp
+    outletId: string;
+    orderType: OrderType;
 }

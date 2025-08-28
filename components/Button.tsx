@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger';
@@ -15,8 +16,8 @@ const Button: React.FC<ButtonProps> = ({ variant = 'primary', size = 'md', child
   const baseClasses = 'inline-flex items-center justify-center border border-transparent font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
-    primary: 'bg-primary text-white hover:bg-primary-700 focus:ring-primary-500',
-    secondary: 'bg-neutral-200 text-neutral-800 hover:bg-neutral-300 focus:ring-neutral-400',
+    primary: 'bg-primary text-white hover:bg-primary-700 focus:ring-primary',
+    secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 focus:ring-slate-400',
     danger: 'bg-danger text-white hover:bg-red-700 focus:ring-red-500',
   };
 

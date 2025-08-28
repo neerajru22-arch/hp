@@ -24,7 +24,7 @@ const getStockLevelIndicator = (stock: number, par: number) => {
     }
     
     const indicator = (
-        <div className="w-full bg-neutral-200 rounded-full h-2.5">
+        <div className="w-full bg-slate-200 rounded-full h-2.5">
             <div className={`${bgColor} h-2.5 rounded-full`} style={{ width: `${Math.min(percentage, 100)}%` }}></div>
         </div>
     );
@@ -44,9 +44,14 @@ const Inventory: React.FC = () => {
   ];
   
   const renderItemActions = (item: InventoryItem) => (
-      <Button variant="secondary" size="sm" onClick={() => alert(`Adjusting stock for ${item.name}`)}>
-        Adjust
-      </Button>
+      <div className="space-x-2">
+        <Button variant="secondary" size="sm" onClick={() => alert(`Returning ${item.name} to vendor.`)}>
+            Return
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => alert(`Adjusting stock for ${item.name}`)}>
+            Adjust
+        </Button>
+      </div>
   );
 
   const getRowClassName = (item: InventoryItem): string => {

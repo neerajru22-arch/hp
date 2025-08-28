@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -23,7 +24,7 @@ const Finance: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <h2 className="text-2xl font-bold text-danger">Access Denied</h2>
-            <p className="text-neutral-600 mt-2">You do not have the required permissions to view this page.</p>
+            <p className="text-slate-600 mt-2">You do not have the required permissions to view this page.</p>
         </div>
     );
   }

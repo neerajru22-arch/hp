@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
@@ -7,18 +8,21 @@ import Orders from './pages/Orders';
 import Inventory from './pages/Inventory';
 import Recipes from './pages/Recipes';
 import Finance from './pages/Finance';
-import OrgChart from './pages/OrgChart';
+import Structure from './pages/Structure';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './auth/AuthContext';
+import Requisitions from './pages/Requisitions';
+import Staff from './pages/Staff';
+import Vendors from './pages/Vendors';
 
 const AppLayout: React.FC = () => {
   return (
-    <div className="flex h-screen bg-neutral-100 text-neutral-800">
+    <div className="flex h-screen bg-slate-100 text-slate-800">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-100 p-6 md:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-6 md:p-8">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -26,7 +30,10 @@ const AppLayout: React.FC = () => {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/recipes" element={<Recipes />} />
             <Route path="/finance" element={<Finance />} />
-            <Route path="/org-chart" element={<OrgChart />} />
+            <Route path="/structure" element={<Structure />} />
+            <Route path="/requisitions" element={<Requisitions />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/vendors" element={<Vendors />} />
           </Routes>
         </main>
       </div>
