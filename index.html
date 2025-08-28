@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halfplate | Restaurant Procurement</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#0052cc',
+                '50': '#e6f0ff',
+                '100': '#cce0ff',
+                '200': '#99c2ff',
+                '300': '#66a3ff',
+                '400': '#3385ff',
+                '500': '#0066ff',
+                '600': '#0052cc',
+                '700': '#003d99',
+                '800': '#002966',
+                '900': '#001433'
+              },
+              secondary: '#172B4D',
+              neutral: {
+                '100': '#F4F5F7',
+                '200': '#EBECF0',
+                '300': '#DFE1E6',
+                '400': '#C1C7D0',
+                '500': '#A5ADBA',
+                '600': '#7A869A',
+                '700': '#6B778C',
+                '800': '#42526E',
+                '900': '#253858'
+              },
+              success: '#00875A',
+              danger: '#DE350B',
+              warning: '#FFAB00',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.8.2",
+    "recharts": "https://aistudiocdn.com/recharts@^3.1.2"
+  }
+}
+</script>
+</head>
+  <body class="bg-neutral-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

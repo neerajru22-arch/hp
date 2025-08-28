@@ -1,0 +1,5 @@
+{
+  "name": "Halfplate Procurement SaaS",
+  "description": "A cloud, multi-tenant SaaS for restaurant procurement. This application provides a secure portal for vendors and restaurants to manage procurement, inventory, recipes, finance, and delivery.",
+  "requestFramePermissions": []
+}
