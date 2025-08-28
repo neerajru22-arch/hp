@@ -1,4 +1,4 @@
-import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem } from '../types';
+import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient } from '../types';
 
 // --- MOCK DATABASE ---
 
@@ -64,10 +64,12 @@ const mockInventory: InventoryItem[] = [
   { id: 'INV-101', outletId: 'outlet-1', name: 'Tomatoes', sku: 'VEG-TOM', category: 'Vegetables', stock: 18, par: 40, unit: 'kg' },
   { id: 'INV-102', outletId: 'outlet-1', name: 'Chicken Tikka Cut', sku: 'MEA-CHI', category: 'Meat', stock: 10, par: 30, unit: 'kg' },
   { id: 'INV-106', outletId: 'outlet-1', name: 'Paneer', sku: 'DAI-PAN', category: 'Dairy', stock: 8, par: 20, unit: 'kg' },
+  { id: 'INV-107', outletId: 'outlet-1', name: 'Basmati Rice', sku: 'DRY-RIC-BGL', category: 'Dry Goods', stock: 100, par: 100, unit: 'kg' },
+
 
   // Outlet 2
   { id: 'INV-103', outletId: 'outlet-2', name: 'Amul Milk', sku: 'DAI-MIL', category: 'Dairy', stock: 5, par: 20, unit: 'L' },
-  { id: 'INV-104', outletId: 'outlet-2', name: 'Basmati Rice', sku: 'DRY-RIC', category: 'Dry Goods', stock: 80, par: 50, unit: 'kg' },
+  { id: 'INV-104', outletId: 'outlet-2', name: 'Basmati Rice', sku: 'DRY-RIC-MUM', category: 'Dry Goods', stock: 80, par: 50, unit: 'kg' },
   // Outlet 3
   { id: 'INV-105', outletId: 'outlet-3', name: 'Mustard Oil', sku: 'OIL-MUS', category: 'Oils', stock: 10, par: 12, unit: 'L' },
 ];
@@ -78,9 +80,27 @@ let mockRequisitions: Requisition[] = [
     { id: 'REQ-003', outletId: 'outlet-2', department: Department.Kitchen, requestedBy: 'Isha Gupta', date: '2023-10-26', items: [{name: 'Basmati Rice', quantity: 20, unit: 'kg'}], status: RequisitionStatus.Fulfilled },
 ]
 
-const mockRecipes: Recipe[] = [
-    { id: 'REC-01', name: 'Paneer Butter Masala', category: 'Main Course', costPerPortion: 120, targetMargin: 70, ingredients: [] },
-    { id: 'REC-02', name: 'Chicken Biryani', category: 'Main Course', costPerPortion: 180, targetMargin: 65, ingredients: [] },
+let mockRecipes: Recipe[] = [
+    { 
+        id: 'REC-01', name: 'Paneer Butter Masala', category: 'Main Course', 
+        costPerPortion: 120, targetMargin: 70, 
+        ingredients: [
+            { name: 'Paneer', quantity: 0.2, unit: 'kg', cost: 60 },
+            { name: 'Tomato Puree', quantity: 0.15, unit: 'L', cost: 20 },
+            { name: 'Butter', quantity: 0.05, unit: 'kg', cost: 25 },
+            { name: 'Cream', quantity: 0.05, unit: 'L', cost: 15 },
+        ] 
+    },
+    { 
+        id: 'REC-02', name: 'Chicken Biryani', category: 'Main Course', 
+        costPerPortion: 180, targetMargin: 65, 
+        ingredients: [
+            { name: 'Chicken', quantity: 0.25, unit: 'kg', cost: 80 },
+            { name: 'Basmati Rice', quantity: 0.15, unit: 'kg', cost: 30 },
+            { name: 'Mixed Spices', quantity: 0.05, unit: 'kg', cost: 40 },
+            { name: 'Ghee', quantity: 0.03, unit: 'kg', cost: 30 },
+        ]
+    },
 ];
 
 const mockFinanceData: ThreeWayMatchItem[] = [
@@ -91,22 +111,22 @@ const mockFinanceData: ThreeWayMatchItem[] = [
 
 const mockDashboardMetrics: {[key: string]: DashboardMetric[]} = {
     'outlet-1': [
-        { title: "Today's Sales", value: '2,80,000', change: '12%', changeType: 'increase', description: 'vs yesterday' },
-        { title: 'Food Cost %', value: '28.5%', change: '0.5%', changeType: 'increase', description: 'vs last month' },
-        { title: 'Average Bill Value', value: '3,500', change: '2.1%', changeType: 'increase', description: 'vs last week' },
-        { title: 'Vendor OTIF', value: '96%', change: '1.2%', changeType: 'decrease', description: 'On-Time In-Full' },
+        { title: "Today's Sales", value: '280000', change: '12%', changeType: 'increase', description: 'vs yesterday' },
+        { title: 'Food Cost %', value: '28.5', change: '0.5%', changeType: 'increase', description: 'vs last month' },
+        { title: 'Average Bill Value', value: '3500', change: '2.1%', changeType: 'increase', description: 'vs last week' },
+        { title: 'Vendor OTIF', value: '96', change: '1.2%', changeType: 'decrease', description: 'On-Time In-Full' },
     ],
     'outlet-2': [
-        { title: "Today's Sales", value: '1,95,000', change: '8%', changeType: 'decrease', description: 'vs yesterday' },
-        { title: 'Food Cost %', value: '31.2%', change: '1.1%', changeType: 'increase', description: 'vs last month' },
-        { title: 'Average Bill Value', value: '2,800', change: '0.5%', changeType: 'decrease', description: 'vs last week' },
-        { title: 'Vendor OTIF', value: '92%', change: '0.8%', changeType: 'increase', description: 'On-Time In-Full' },
+        { title: "Today's Sales", value: '195000', change: '8%', changeType: 'decrease', description: 'vs yesterday' },
+        { title: 'Food Cost %', value: '31.2', change: '1.1%', changeType: 'increase', description: 'vs last month' },
+        { title: 'Average Bill Value', value: '2800', change: '0.5%', changeType: 'decrease', description: 'vs last week' },
+        { title: 'Vendor OTIF', value: '92', change: '0.8%', changeType: 'increase', description: 'On-Time In-Full' },
     ],
     'outlet-3': [
-        { title: "Today's Sales", value: '3,50,000', change: '15%', changeType: 'increase', description: 'vs yesterday' },
-        { title: 'Food Cost %', value: '29.8%', change: '0.3%', changeType: 'decrease', description: 'vs last month' },
-        { title: 'Average Bill Value', value: '4,100', change: '3.0%', changeType: 'increase', description: 'vs last week' },
-        { title: 'Vendor OTIF', value: '98%', change: '0.5%', changeType: 'increase', description: 'On-Time In-Full' },
+        { title: "Today's Sales", value: '350000', change: '15%', changeType: 'increase', description: 'vs yesterday' },
+        { title: 'Food Cost %', value: '29.8', change: '0.3%', changeType: 'decrease', description: 'vs last month' },
+        { title: 'Average Bill Value', value: '4100', change: '3.0%', changeType: 'increase', description: 'vs last week' },
+        { title: 'Vendor OTIF', value: '98', change: '0.5%', changeType: 'increase', description: 'On-Time In-Full' },
     ],
 };
 
@@ -115,13 +135,13 @@ const mockStoreManagerDashboardMetrics: {[key: string]: DashboardMetric[]} = {
         { title: 'Low Stock Items', value: '2', description: 'Items below 50% of par' },
         { title: 'Stock Turnover', value: '4.2', description: 'Rate for this month' },
         { title: 'Pending Requisitions', value: '2', description: 'From Kitchen & Bar' },
-        { title: 'Total Inventory Value', value: '1,50,000', description: 'As of today' },
+        { title: 'Total Inventory Value', value: '150000', description: 'As of today' },
     ],
     'outlet-2': [
         { title: 'Low Stock Items', value: '1', description: 'Items below 50% of par' },
         { title: 'Stock Turnover', value: '3.8', description: 'Rate for this month' },
         { title: 'Pending Requisitions', value: '0', description: 'All requests fulfilled' },
-        { title: 'Total Inventory Value', value: '2,10,000', description: 'As of today' },
+        { title: 'Total Inventory Value', value: '210000', description: 'As of today' },
     ]
 };
 
@@ -158,6 +178,7 @@ let mockCustomerOrders: CustomerOrder[] = [
     { id: 'co-1', tableId: 't-2', waiterId: 'user-6', status: 'Open', covers: 4, items: [], total: 0 },
     { id: 'co-2', tableId: 't-4', waiterId: 'user-6', status: 'Open', covers: 3, items: [], total: 0 },
     { id: 'co-3', tableId: 't-6', waiterId: 'user-6', status: 'Open', covers: 2, items: [], total: 0 },
+    { id: 'co-closed-1', tableId: 't-1', waiterId: 'user-6', status: 'Closed', covers: 2, items: [{id: 'menu-1', name: 'Paneer Tikka', quantity: 2, price: 350}], total: 700},
 ];
 
 const mockMenuItems: MenuItem[] = [
@@ -248,6 +269,23 @@ export const api = {
     getInventory: (outletId: string) => simulateApiCall(mockInventory.filter(i => i.outletId === outletId)),
     getInventoryForOutletIds: (outletIds: string[]) => simulateApiCall(mockInventory.filter(i => outletIds.includes(i.outletId))),
     getRecipes: () => simulateApiCall(mockRecipes),
+    addRecipe: (recipe: Omit<Recipe, 'id'>) => {
+        const newRecipe: Recipe = { ...recipe, id: `REC-${Date.now()}` };
+        mockRecipes.push(newRecipe);
+        return simulateApiCall(newRecipe);
+    },
+    updateRecipe: (recipe: Recipe) => {
+        const index = mockRecipes.findIndex(r => r.id === recipe.id);
+        if (index > -1) {
+            mockRecipes[index] = recipe;
+            return simulateApiCall(recipe);
+        }
+        return Promise.reject(new Error("Recipe not found"));
+    },
+    deleteRecipe: (recipeId: string) => {
+        mockRecipes = mockRecipes.filter(r => r.id !== recipeId);
+        return simulateApiCall({ success: true });
+    },
     getFinanceData: (outletId: string) => simulateApiCall(mockFinanceData.filter(f => f.outletId === outletId)),
     getDashboardMetrics: (outletId: string) => simulateApiCall(mockDashboardMetrics[outletId] || []),
     getSalesData: (outletId: string, period: 'week' | 'month' | 'year') => simulateApiCall(mockSalesDataByOutlet[outletId]?.[period] || []),
@@ -431,9 +469,9 @@ export const api = {
     // User Management APIs
     getAllUsers: () => simulateApiCall(mockUsers),
     addUser: (user: Omit<User, 'id'>) => {
-        const newUser: User = { ...user, id: `user-${Date.now()}` };
-        mockUsers.push(newUser);
-        return simulateApiCall(newUser);
+        const new_user: User = { ...user, id: `user-${Date.now()}` };
+        mockUsers.push(new_user);
+        return simulateApiCall(new_user);
     },
     updateUser: (user: User) => {
         const index = mockUsers.findIndex(u => u.id === user.id);

@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon } from './icons/Icons';
+import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon, PlusIcon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
 
@@ -100,6 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ],
     [UserRole.Admin]: [
       ...commonLinks,
+      { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
       ...managementLinks,
       { to: '/finance', icon: BanknotesIcon, text: 'Finance' },
       { to: '/structure', icon: ShareIcon, text: 'Entity Structure' },
@@ -107,6 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     [UserRole.Chef]: [
       { to: '/dashboard', icon: ClipboardDocumentListIcon, text: 'KOT View' },
       { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
+      { to: '/dashboard?request-ingredients=true', icon: PlusIcon, text: 'Request Ingredients' },
     ],
     [UserRole.StoreManager]: [
         { to: '/dashboard', icon: ChartBarIcon, text: 'Dashboard' },
@@ -155,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             <NavLink 
               key={link.to} 
               to={link.to} 
-              className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}
+              className={({ isActive }) => `${navLinkClasses} ${isActive && !link.to.includes('?') ? activeClass : inactiveClass}`}
               onClick={() => setIsOpen(false)} // Close sidebar on link click on mobile
             >
               <link.icon className="w-6 h-6 mr-3" />

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -30,7 +29,7 @@ const Orders: React.FC = () => {
     { header: 'Vendor', accessor: 'vendor' },
     { header: 'Date', accessor: 'date' },
     { header: 'Items', accessor: 'itemCount' },
-    { header: 'Total', accessor: (item: Order) => `$${item.total.toFixed(2)}` },
+    { header: 'Total', accessor: (item: Order) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.total) },
     { header: 'Status', accessor: (item: Order) => getStatusBadge(item.status) },
   ];
 

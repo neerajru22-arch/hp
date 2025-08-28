@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -99,10 +98,12 @@ const Staff: React.FC = () => {
     }
   };
 
+  const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
+
   const columns: Column<StaffMember>[] = [
     { header: 'Name', accessor: 'name', className: 'font-medium text-secondary' },
     { header: 'Role', accessor: 'role' },
-    { header: 'Salary', accessor: (item) => `$${item.salary.toLocaleString()}` },
+    { header: 'Salary', accessor: (item) => formatCurrency(item.salary) },
     { header: 'Attendance', accessor: (item) => `${item.attendance}%` },
   ];
 
@@ -132,7 +133,7 @@ const Staff: React.FC = () => {
         </div>
         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
             <h3 className="text-sm font-medium text-slate-600">Total Payroll (Monthly)</h3>
-            <p className="text-3xl font-bold text-secondary">${((staff?.reduce((sum, s) => sum + s.salary, 0) || 0) / 12).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+            <p className="text-3xl font-bold text-secondary">{formatCurrency(((staff?.reduce((sum, s) => sum + s.salary, 0) || 0) / 12))}</p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
             <h3 className="text-sm font-medium text-slate-600">Avg. Attendance</h3>

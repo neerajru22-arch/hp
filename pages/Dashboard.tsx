@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import DashboardCard from '../components/DashboardCard';
@@ -32,24 +32,28 @@ const getRequisitionStatusBadge = (status: RequisitionStatus) => {
     return <span className={`${baseClasses} ${statusClasses[status]}`}>{status}</span>;
 };
 
-// FIX: Centralized metric value formatter to correctly handle currency vs. other units and fix type errors.
+// Centralized metric value formatter to correctly handle currency vs. other units.
 const formatMetricValue = (metric: DashboardMetric): string => {
     const { title, value } = metric;
     const currencyMetrics = ["Today's Sales", "Average Bill Value", "Total Inventory Value", "My Sales"];
-    
+    const percentageMetrics = ["Food Cost %", "Vendor OTIF"];
+
+    const numberValue = Number(String(value).replace(/,/g, ''));
+    if (isNaN(numberValue)) return String(value);
+
     if (currencyMetrics.includes(title)) {
-        // Remove commas for parsing and check if it's a valid number.
-        const numberValue = Number(String(value).replace(/,/g, ''));
-        if (!isNaN(numberValue)) {
-            return new Intl.NumberFormat('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 0
-            }).format(numberValue);
-        }
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(numberValue);
     }
-    // For non-currency values or values that fail parsing, return as string.
-    return String(value);
+    
+    if (percentageMetrics.includes(title)) {
+        return `${value}%`;
+    }
+    
+    return new Intl.NumberFormat('en-IN').format(numberValue);
 };
 
 
@@ -774,6 +778,20 @@ const ChefDashboard: React.FC = () => {
     const { selectedOutlet } = useAuth();
     const { data: kots, loading, error, refetch } = useApi(api.getKots, selectedOutlet?.id || '');
     const [isRequisitionModalOpen, setIsRequisitionModalOpen] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('request-ingredients') === 'true') {
+            setIsRequisitionModalOpen(true);
+        }
+    }, [location.search]);
+
+    const handleCloseRequisitionModal = () => {
+        setIsRequisitionModalOpen(false);
+        navigate('/dashboard', { replace: true });
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -788,15 +806,18 @@ const ChefDashboard: React.FC = () => {
     };
     
     const allKots = kots || [];
+    
     const readyKots = allKots.filter(k => k.items.length > 0 && k.items.every(i => i.status === KotStatus.Ready));
     
     const activeKots = allKots.filter(k => !readyKots.some(rk => rk.id === k.id));
 
-    const takeawayKots = activeKots.filter(k => k.orderType === OrderType.Takeaway);
-    const dineInKots = activeKots.filter(k => k.orderType === OrderType.DineIn);
+    const newKots = activeKots.filter(k => k.items.every(i => i.status === KotStatus.New));
+    
+    const preparingKots = activeKots.filter(k => !newKots.some(nk => nk.id === k.id));
 
-    const newKots = dineInKots.filter(k => k.items.every(i => i.status === KotStatus.New));
-    const preparingKots = dineInKots.filter(k => !newKots.some(nk => nk.id === k.id));
+    const takeawayKots = activeKots.filter(k => k.orderType === OrderType.Takeaway);
+    const dineInNewKots = newKots.filter(k => k.orderType === OrderType.DineIn);
+    const dineInPreparingKots = preparingKots.filter(k => k.orderType === OrderType.DineIn);
 
 
     if (loading && !kots) return <div className="text-center p-8">Loading Kitchen Orders...</div>;
@@ -820,18 +841,18 @@ const ChefDashboard: React.FC = () => {
                 </div>
                 {/* New Column */}
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({newKots.length})</h3>
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({dineInNewKots.length})</h3>
                     <div className="flex-grow overflow-y-auto">
-                        {newKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                        {newKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new dine-in orders.</p>}
+                        {dineInNewKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {dineInNewKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new dine-in orders.</p>}
                     </div>
                 </div>
                 {/* Preparing Column */}
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
-                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({preparingKots.length})</h3>
+                    <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({dineInPreparingKots.length})</h3>
                     <div className="flex-grow overflow-y-auto">
-                        {preparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
-                        {preparingKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders in preparation.</p>}
+                        {dineInPreparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {dineInPreparingKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders in preparation.</p>}
                     </div>
                 </div>
                 {/* Ready Column */}
@@ -843,7 +864,7 @@ const ChefDashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
-            {isRequisitionModalOpen && <RequisitionModal onClose={() => setIsRequisitionModalOpen(false)} onSubmit={() => {}} />}
+            {isRequisitionModalOpen && <RequisitionModal onClose={handleCloseRequisitionModal} onSubmit={() => {}} />}
         </div>
     );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -36,7 +35,7 @@ const Finance: React.FC = () => {
     { header: 'Invoice ID', accessor: 'invoiceId' },
     { header: 'Vendor', accessor: 'vendor' },
     { header: 'Date', accessor: 'date' },
-    { header: 'Amount', accessor: (item: ThreeWayMatchItem) => `$${item.amount.toFixed(2)}` },
+    { header: 'Amount', accessor: (item: ThreeWayMatchItem) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.amount) },
     { header: 'Status', accessor: (item: ThreeWayMatchItem) => getStatusBadge(item.status) },
   ];
 
@@ -53,9 +52,9 @@ const Finance: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-        <h2 className="text-xl font-semibold text-secondary">AP Automation for {selectedOutlet.name}</h2>
-        <Button onClick={() => alert('Exporting data to Tally/Zoho/QuickBooks...')}>
-          Export to Tally/Zoho
+        <h2 className="text-xl font-semibold text-secondary">AP Automation & GST for {selectedOutlet.name}</h2>
+        <Button onClick={() => alert('Exporting data to Tally/Zoho/QuickBooks/Razorpay...')}>
+          Export to Tally/Zoho/Razorpay
         </Button>
       </div>
 
