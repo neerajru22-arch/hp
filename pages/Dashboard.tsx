@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import DashboardCard from '../components/DashboardCard';
 import Table, { Column } from '../components/Table';
-import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType, RequisitionItem, Department, DashboardMetric } from '../types';
+import { Order, OrderStatus, UserRole, Requisition, RequisitionStatus, Table as TableType, TableStatus, CustomerOrder, MenuItem, KOT, KotStatus, CustomerOrderItem, KOTItem, OrderType, RequisitionItem, Department, DashboardMetric, CustomerOrderItemStatus } from '../types';
 import { useAuth } from '../auth/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, } from 'recharts';
 import Button from '../components/Button';
@@ -239,7 +240,7 @@ const TableManagementModal: React.FC<{
     const { data: orderResult, loading: orderLoading, refetch: refetchOrder } = useApi(api.getCustomerOrder, table.orderId || '');
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
     const [covers, setCovers] = useState(1);
-    const [newlyAddedItems, setNewlyAddedItems] = useState<CustomerOrderItem[]>([]);
+    const [newlyAddedItems, setNewlyAddedItems] = useState<Omit<CustomerOrderItem, 'status'>[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('All');
 
     const isCoversInvalid = covers <= 0 || covers > table.capacity;
@@ -260,7 +261,7 @@ const TableManagementModal: React.FC<{
             if (existing) {
                 return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
             }
-            return [...prev, { ...item, quantity: 1 }];
+            return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
         });
     };
 
@@ -327,15 +328,20 @@ const TableManagementModal: React.FC<{
                                 {orderLoading ? <p>Loading order...</p> : (
                                 <>
                                     <ul className="divide-y divide-slate-200">
-                                        {orderResult?.items.map((item, index) => (
-                                            <li key={`${item.id}-${index}`} className="py-3 flex justify-between items-center">
-                                                <div>
-                                                    <p className="font-medium text-slate-800 text-base">{item.name}</p>
-                                                    <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
-                                                </div>
-                                                <p className="font-semibold text-secondary text-base">{formatCurrency(item.price * item.quantity)}</p>
-                                            </li>
-                                        ))}
+                                        {orderResult?.items.map((item, index) => {
+                                            const isCancelled = item.status === 'Cancelled';
+                                            return (
+                                                <li key={`${item.id}-${index}`} className={`py-3 flex justify-between items-center ${isCancelled ? 'opacity-50' : ''}`}>
+                                                    <div>
+                                                        <p className={`font-medium text-slate-800 text-base ${isCancelled ? 'line-through' : ''}`}>{item.name}</p>
+                                                        <p className="text-sm text-slate-500">
+                                                            Qty: {item.quantity} {isCancelled && <span className="font-semibold text-red-600">(Cancelled)</span>}
+                                                        </p>
+                                                    </div>
+                                                    <p className={`font-semibold text-secondary text-base ${isCancelled ? 'line-through' : ''}`}>{formatCurrency(item.price * item.quantity)}</p>
+                                                </li>
+                                            )
+                                        })}
                                     </ul>
                                     <div className="mt-4 pt-4 border-t">
                                         <h4 className="font-semibold text-secondary text-base">New Items to Send</h4>
@@ -355,7 +361,7 @@ const TableManagementModal: React.FC<{
                             </div>
                             <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-xl text-primary">
                                 <span>Total</span>
-                                <span>{formatCurrency((orderResult?.total || 0) + newItemsTotal)}</span>
+                                <span>{formatCurrency(orderResult?.total || 0)}</span>
                             </div>
                         </div>
                         {/* Right Side: Menu */}
@@ -421,7 +427,7 @@ const TakeawayModal: React.FC<{
     outletId: string;
 }> = ({ onClose, outletId }) => {
     const { data: menuItems, loading: menuLoading } = useApi(api.getMenuItems);
-    const [newlyAddedItems, setNewlyAddedItems] = useState<CustomerOrderItem[]>([]);
+    const [newlyAddedItems, setNewlyAddedItems] = useState<Omit<CustomerOrderItem, 'status'>[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('All');
     
     const handleAddItem = (item: MenuItem) => {
@@ -430,7 +436,7 @@ const TakeawayModal: React.FC<{
             if (existing) {
                 return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
             }
-            return [...prev, { ...item, quantity: 1 }];
+            return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
         });
     };
 
@@ -733,7 +739,7 @@ const RequisitionModal: React.FC<{
 };
 
 
-const KotCard: React.FC<{ kot: KOT; onItemStatusChange: (kotId: string, itemIndex: number, status: KotStatus) => void; }> = ({ kot, onItemStatusChange }) => {
+const KotCard: React.FC<{ kot: KOT; onItemStatusChange: (kotId: string, itemIndex: number, status: KotStatus) => void; onItemCancel: (kotId: string, itemIndex: number) => void; }> = ({ kot, onItemStatusChange, onItemCancel }) => {
     const timeSince = useElapsedTime(kot.createdAt);
     
     const getStatusColor = (status: KotStatus) => {
@@ -761,10 +767,16 @@ const KotCard: React.FC<{ kot: KOT; onItemStatusChange: (kotId: string, itemInde
                         </div>
                         <div className="flex space-x-1">
                            {item.status === KotStatus.New && (
+                                <>
+                                <Button size="sm" variant="secondary" onClick={() => onItemCancel(kot.id, index)}>Cancel</Button>
                                 <Button size="sm" onClick={() => onItemStatusChange(kot.id, index, KotStatus.Preparing)}>Cook</Button>
+                                </>
                            )}
                            {item.status === KotStatus.Preparing && (
+                                <>
+                                <Button size="sm" variant="secondary" onClick={() => onItemCancel(kot.id, index)}>Cancel</Button>
                                 <Button size="sm" variant="primary" onClick={() => onItemStatusChange(kot.id, index, KotStatus.Ready)}>Ready</Button>
+                                </>
                            )}
                         </div>
                     </li>
@@ -804,16 +816,26 @@ const ChefDashboard: React.FC = () => {
         await api.updateKotItemStatus(kotId, itemIndex, status);
         refetch();
     };
+
+    const handleItemCancel = async (kotId: string, itemIndex: number) => {
+        await api.cancelKotItem(kotId, itemIndex);
+        refetch();
+    };
     
     const allKots = kots || [];
     
     const readyKots = allKots.filter(k => k.items.length > 0 && k.items.every(i => i.status === KotStatus.Ready));
     
-    const activeKots = allKots.filter(k => !readyKots.some(rk => rk.id === k.id));
+    // An active KOT is one that isn't fully ready and hasn't been cancelled out
+    const activeKots = allKots.filter(k => k.items.length > 0 && !readyKots.some(rk => rk.id === k.id));
 
     const newKots = activeKots.filter(k => k.items.every(i => i.status === KotStatus.New));
     
-    const preparingKots = activeKots.filter(k => !newKots.some(nk => nk.id === k.id));
+    // A preparing KOT has at least one item being prepared, and no items are new.
+    const preparingKots = activeKots.filter(k => 
+        !newKots.some(nk => nk.id === k.id) &&
+        k.items.some(i => i.status === KotStatus.Preparing)
+    );
 
     const takeawayKots = activeKots.filter(k => k.orderType === OrderType.Takeaway);
     const dineInNewKots = newKots.filter(k => k.orderType === OrderType.DineIn);
@@ -835,7 +857,7 @@ const ChefDashboard: React.FC = () => {
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                     <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-primary pb-2">Takeaway ({takeawayKots.length})</h3>
                     <div className="flex-grow overflow-y-auto">
-                        {takeawayKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {takeawayKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} onItemCancel={handleItemCancel} />)}
                         {takeawayKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new takeaway orders.</p>}
                     </div>
                 </div>
@@ -843,7 +865,7 @@ const ChefDashboard: React.FC = () => {
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                     <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-red-500 pb-2">New ({dineInNewKots.length})</h3>
                     <div className="flex-grow overflow-y-auto">
-                        {dineInNewKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {dineInNewKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} onItemCancel={handleItemCancel} />)}
                         {dineInNewKots.length === 0 && <p className="text-slate-500 text-center pt-10">No new dine-in orders.</p>}
                     </div>
                 </div>
@@ -851,7 +873,7 @@ const ChefDashboard: React.FC = () => {
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                     <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-yellow-500 pb-2">Preparing ({dineInPreparingKots.length})</h3>
                     <div className="flex-grow overflow-y-auto">
-                        {dineInPreparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {dineInPreparingKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} onItemCancel={handleItemCancel} />)}
                         {dineInPreparingKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders in preparation.</p>}
                     </div>
                 </div>
@@ -859,7 +881,7 @@ const ChefDashboard: React.FC = () => {
                 <div className="bg-slate-100 p-4 rounded-lg flex flex-col w-full sm:w-80 flex-shrink-0">
                     <h3 className="text-lg font-bold text-secondary mb-4 border-b-2 border-green-500 pb-2">Ready for Pickup ({readyKots.length})</h3>
                      <div className="flex-grow overflow-y-auto">
-                        {readyKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} />)}
+                        {readyKots.map(kot => <KotCard key={kot.id} kot={kot} onItemStatusChange={handleItemStatusChange} onItemCancel={handleItemCancel}/>)}
                         {readyKots.length === 0 && <p className="text-slate-500 text-center pt-10">No orders ready.</p>}
                     </div>
                 </div>

@@ -199,13 +199,17 @@ export interface MenuItem {
     name: string;
     price: number;
     category: string;
+    recipeId: string;
 }
+
+export type CustomerOrderItemStatus = 'Ordered' | 'Cancelled';
 
 export interface CustomerOrderItem {
     id: string;
     name: string;
     quantity: number;
     price: number;
+    status: CustomerOrderItemStatus;
 }
 
 export interface CustomerOrder {
@@ -222,6 +226,7 @@ export enum KotStatus {
     New = 'New',
     Preparing = 'Preparing',
     Ready = 'Ready for Pickup',
+    Cancelled = 'Cancelled'
 }
 
 export interface KOTItem {
@@ -244,4 +249,20 @@ export interface KOT {
     createdAt: number; // Timestamp
     outletId: string;
     orderType: OrderType;
+}
+
+export enum MenuEngineeringCategory {
+  Star = 'Star', // High Profit, High Popularity
+  Plowhorse = 'Plowhorse', // Low Profit, High Popularity
+  Puzzle = 'Puzzle', // High Profit, Low Popularity
+  Dog = 'Dog', // Low Profit, Low Popularity
+}
+
+export interface MenuEngineeringItem {
+  id: string;
+  name: string;
+  classification: MenuEngineeringCategory;
+  unitsSold: number;
+  profitPerItem: number;
+  totalProfit: number;
 }

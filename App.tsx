@@ -15,6 +15,7 @@ import { useAuth } from './auth/AuthContext';
 import Requisitions from './pages/Requisitions';
 import Staff from './pages/Staff';
 import Vendors from './pages/Vendors';
+import MenuEngineering from './pages/MenuEngineering';
 
 const AppLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
@@ -45,6 +46,7 @@ const AppLayout: React.FC = () => {
             <Route path="/requisitions" element={<Requisitions />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/vendors" element={<Vendors />} />
+            <Route path="/menu-engineering" element={<MenuEngineering />} />
           </Routes>
         </main>
       </div>

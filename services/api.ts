@@ -1,4 +1,5 @@
-import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient } from '../types';
+
+import { Order, OrderStatus, InventoryItem, Recipe, ThreeWayMatchItem, MatchStatus, DashboardMetric, User, UserRole, Outlet, Requisition, RequisitionStatus, Department, StaffMember, StaffRole, Vendor, VendorStatus, VendorPerformance, Table, TableStatus, CustomerOrder, CustomerOrderItem, MenuItem, KOT, KotStatus, KOTItem, Kitchen, Floor, OrderType, RequisitionItem, Ingredient, CustomerOrderItemStatus, MenuEngineeringCategory, MenuEngineeringItem } from '../types';
 
 // --- MOCK DATABASE ---
 
@@ -101,6 +102,25 @@ let mockRecipes: Recipe[] = [
             { name: 'Ghee', quantity: 0.03, unit: 'kg', cost: 30 },
         ]
     },
+    {
+        id: 'REC-03', name: 'Paneer Tikka', category: 'Starters',
+        costPerPortion: 95, targetMargin: 75,
+        ingredients: [
+            { name: 'Paneer', quantity: 0.18, unit: 'kg', cost: 54 },
+            { name: 'Yogurt', quantity: 0.05, unit: 'kg', cost: 10 },
+            { name: 'Tikka Masala', quantity: 0.02, unit: 'kg', cost: 31 },
+        ]
+    },
+    {
+        id: 'REC-04', name: 'Dal Makhani', category: 'Mains',
+        costPerPortion: 80, targetMargin: 80,
+        ingredients: [
+            { name: 'Urad Dal', quantity: 0.1, unit: 'kg', cost: 20 },
+            { name: 'Butter', quantity: 0.05, unit: 'kg', cost: 25 },
+            { name: 'Cream', quantity: 0.05, unit: 'L', cost: 15 },
+             { name: 'Tomato Puree', quantity: 0.1, unit: 'L', cost: 20 },
+        ]
+    }
 ];
 
 const mockFinanceData: ThreeWayMatchItem[] = [
@@ -174,21 +194,26 @@ let mockTables: Table[] = [
     { id: 't-6', name: 'Table 6', capacity: 2, status: TableStatus.Seated, assignedWaiterId: 'user-6', orderId: 'co-3', seatedAt: Date.now() - 5 * 60000, floorId: 'floor-2' },
 ];
 
+const mockMenuItems: MenuItem[] = [
+    { id: 'menu-1', name: 'Paneer Tikka', price: 350, category: 'Starters', recipeId: 'REC-03' },
+    { id: 'menu-2', name: 'Butter Chicken', price: 450, category: 'Mains', recipeId: 'REC-02' }, // Note: No recipe for this one
+    { id: 'menu-3', name: 'Dal Makhani', price: 300, category: 'Mains', recipeId: 'REC-04' },
+    { id: 'menu-4', name: 'Masala Coke', price: 120, category: 'Drinks', recipeId: 'REC-_DUMMY_' }, // No recipe
+    { id: 'menu-5', name: 'Garlic Naan', price: 80, category: 'Breads', recipeId: 'REC-_DUMMY_' },
+    { id: 'menu-6', name: 'Gulab Jamun', price: 150, category: 'Desserts', recipeId: 'REC-_DUMMY_' },
+];
+
 let mockCustomerOrders: CustomerOrder[] = [
     { id: 'co-1', tableId: 't-2', waiterId: 'user-6', status: 'Open', covers: 4, items: [], total: 0 },
     { id: 'co-2', tableId: 't-4', waiterId: 'user-6', status: 'Open', covers: 3, items: [], total: 0 },
     { id: 'co-3', tableId: 't-6', waiterId: 'user-6', status: 'Open', covers: 2, items: [], total: 0 },
-    { id: 'co-closed-1', tableId: 't-1', waiterId: 'user-6', status: 'Closed', covers: 2, items: [{id: 'menu-1', name: 'Paneer Tikka', quantity: 2, price: 350}], total: 700},
+    // Closed orders for Menu Engineering
+    { id: 'co-closed-1', tableId: 't-1', waiterId: 'user-6', status: 'Closed', covers: 2, items: [{id: 'menu-1', name: 'Paneer Tikka', quantity: 2, price: 350, status: 'Ordered'}], total: 700},
+    { id: 'co-closed-2', tableId: 't-3', waiterId: 'user-6', status: 'Closed', covers: 4, items: [{id: 'menu-2', name: 'Butter Chicken', quantity: 3, price: 450, status: 'Ordered'}, {id: 'menu-5', name: 'Garlic Naan', quantity: 6, price: 80, status: 'Ordered'}], total: 1830},
+    { id: 'co-closed-3', tableId: 't-5', waiterId: 'user-6', status: 'Closed', covers: 1, items: [{id: 'menu-3', name: 'Dal Makhani', quantity: 1, price: 300, status: 'Ordered'}], total: 300},
+    { id: 'co-closed-4', tableId: 't-1', waiterId: 'user-6', status: 'Closed', covers: 3, items: [{id: 'menu-1', name: 'Paneer Tikka', quantity: 1, price: 350, status: 'Ordered'}, {id: 'menu-2', name: 'Butter Chicken', quantity: 2, price: 450, status: 'Ordered'}], total: 1250},
 ];
 
-const mockMenuItems: MenuItem[] = [
-    { id: 'menu-1', name: 'Paneer Tikka', price: 350, category: 'Starters' },
-    { id: 'menu-2', name: 'Butter Chicken', price: 450, category: 'Mains' },
-    { id: 'menu-3', name: 'Dal Makhani', price: 300, category: 'Mains' },
-    { id: 'menu-4', name: 'Masala Coke', price: 120, category: 'Drinks' },
-    { id: 'menu-5', name: 'Garlic Naan', price: 80, category: 'Breads' },
-    { id: 'menu-6', name: 'Gulab Jamun', price: 150, category: 'Desserts' },
-];
 
 let mockKots: KOT[] = [];
 let takeawayOrderCounter = 1;
@@ -381,6 +406,10 @@ export const api = {
                 table.status = TableStatus.Available;
                 table.seatedAt = null;
                 table.orderId = undefined;
+                
+                // BUG FIX: Remove the KOT from the chef's view when the bill is closed.
+                mockKots = mockKots.filter(kot => kot.tableId !== table.id);
+
                 return simulateApiCall({ order, table });
             }
         }
@@ -395,7 +424,7 @@ export const api = {
         return Promise.reject(new Error("Table not found or not in Food Ready state"));
     },
     // KOT APIs
-    sendKotToKitchen: (orderId: string, newItems: CustomerOrderItem[]) => {
+    sendKotToKitchen: (orderId: string, newItems: Omit<CustomerOrderItem, 'status'>[]) => {
         const order = mockCustomerOrders.find(o => o.id === orderId);
         const table = mockTables.find(t => t.id === order?.tableId);
         if (order && table) {
@@ -419,7 +448,8 @@ export const api = {
             }
             
             newItems.forEach(newItem => {
-                order.items.push(newItem);
+                const itemWithStatus: CustomerOrderItem = {...newItem, status: 'Ordered'};
+                order.items.push(itemWithStatus);
                 order.total += newItem.price * newItem.quantity;
             });
 
@@ -431,7 +461,7 @@ export const api = {
         }
         return Promise.reject(new Error("Order or Table not found"));
     },
-    createTakeawayOrder: (outletId: string, items: CustomerOrderItem[]) => {
+    createTakeawayOrder: (outletId: string, items: Omit<CustomerOrderItem, 'status'>[]) => {
         const kotItems: KOTItem[] = items.map(item => ({ name: item.name, quantity: item.quantity, status: KotStatus.New }));
         const newKot: KOT = {
             id: `kot-${Date.now()}`,
@@ -448,10 +478,10 @@ export const api = {
         const activeKots = mockKots.filter(kot => kot.outletId === outletId);
         return simulateApiCall(activeKots);
     },
-    updateKotItemStatus: (kotId: string, itemIndex: number, status: KotStatus) => {
+    updateKotItemStatus: (kotId: string, itemIndex: number, newStatus: KotStatus) => {
         const kot = mockKots.find(k => k.id === kotId);
         if (kot && kot.items[itemIndex]) {
-            kot.items[itemIndex].status = status;
+            kot.items[itemIndex].status = newStatus;
             
             if (kot.orderType === OrderType.DineIn && kot.tableId) {
                 const anyItemReady = kot.items.some(item => item.status === KotStatus.Ready);
@@ -463,6 +493,31 @@ export const api = {
                 }
             }
             return simulateApiCall(kot);
+        }
+        return Promise.reject(new Error("KOT or KOT item not found"));
+    },
+    cancelKotItem: (kotId: string, itemIndex: number) => {
+        const kot = mockKots.find(k => k.id === kotId);
+        if (kot && kot.items[itemIndex]) {
+            const cancelledItem = kot.items[itemIndex];
+            kot.items.splice(itemIndex, 1); // Remove from KOT
+
+            // Find corresponding customer order and update the item status
+            const order = mockCustomerOrders.find(o => o.tableId === kot.tableId);
+            if (order) {
+                // Find the first matching item that isn't already cancelled
+                const orderItem = order.items.find(item => item.name === cancelledItem.name && item.status !== 'Cancelled');
+                if (orderItem) {
+                    orderItem.status = 'Cancelled';
+                    order.total -= orderItem.price * orderItem.quantity;
+                }
+            }
+            // If the KOT is now empty, remove it entirely
+            if(kot.items.length === 0) {
+                mockKots = mockKots.filter(k => k.id !== kotId);
+            }
+
+            return simulateApiCall({ success: true });
         }
         return Promise.reject(new Error("KOT or KOT item not found"));
     },
@@ -489,4 +544,65 @@ export const api = {
         }
         return Promise.reject(new Error("User not found"));
     },
+    getMenuEngineeringReport: (outletId: string): Promise<MenuEngineeringItem[]> => {
+        const relevantOrders = mockCustomerOrders.filter(o => o.status === 'Closed' && mockTables.find(t => t.id === o.tableId)?.floorId.startsWith('floor-')); // A simple way to check if it's an outlet table
+        
+        const salesCount: { [key: string]: { unitsSold: number; menuItem: MenuItem } } = {};
+        let totalUnitsSold = 0;
+
+        for (const order of relevantOrders) {
+            for (const item of order.items) {
+                if (item.status === 'Ordered') {
+                     const menuItem = mockMenuItems.find(mi => mi.id === item.id);
+                     if (menuItem) {
+                        if (!salesCount[item.id]) {
+                            salesCount[item.id] = { unitsSold: 0, menuItem };
+                        }
+                        salesCount[item.id].unitsSold += item.quantity;
+                        totalUnitsSold += item.quantity;
+                     }
+                }
+            }
+        }
+
+        const itemsWithProfit = Object.values(salesCount).map(({ unitsSold, menuItem }) => {
+            const recipe = mockRecipes.find(r => r.id === menuItem.recipeId);
+            const profitPerItem = recipe ? menuItem.price - recipe.costPerPortion : 0;
+            return {
+                id: menuItem.id,
+                name: menuItem.name,
+                unitsSold,
+                profitPerItem,
+                totalProfit: unitsSold * profitPerItem,
+                popularity: unitsSold / totalUnitsSold
+            };
+        });
+
+        if (itemsWithProfit.length === 0) return simulateApiCall([]);
+
+        const avgPopularity = 1 / itemsWithProfit.length;
+        const avgProfit = itemsWithProfit.reduce((sum, item) => sum + item.profitPerItem, 0) / itemsWithProfit.length;
+
+        const report: MenuEngineeringItem[] = itemsWithProfit.map(item => {
+            const isPopular = item.popularity > avgPopularity * 0.7; // 70% rule
+            const isProfitable = item.profitPerItem > avgProfit;
+            let classification: MenuEngineeringCategory;
+
+            if (isPopular && isProfitable) classification = MenuEngineeringCategory.Star;
+            else if (isPopular && !isProfitable) classification = MenuEngineeringCategory.Plowhorse;
+            else if (!isPopular && isProfitable) classification = MenuEngineeringCategory.Puzzle;
+            else classification = MenuEngineeringCategory.Dog;
+
+            return {
+                id: item.id,
+                name: item.name,
+                classification,
+                unitsSold: item.unitsSold,
+                profitPerItem: item.profitPerItem,
+                totalProfit: item.totalProfit
+            };
+        });
+
+        return simulateApiCall(report);
+    }
 };

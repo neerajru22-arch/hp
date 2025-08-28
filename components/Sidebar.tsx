@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon, PlusIcon } from './icons/Icons';
+import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, ChevronDownIcon, PlusIcon, LightBulbIcon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
 
@@ -89,24 +90,31 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/vendors', icon: BuildingStorefrontIcon, text: 'Vendors' },
   ];
 
+  const analysisLinks = [
+    { to: '/menu-engineering', icon: LightBulbIcon, text: 'Menu Engineering' },
+  ];
+
   const roleLinks = {
     [UserRole.RestaurantOwner]: [
       ...commonLinks,
       { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
       { to: '/staff', icon: UserGroupIcon, text: 'Staff' },
       ...managementLinks,
+      ...analysisLinks,
       { to: '/finance', icon: BanknotesIcon, text: 'Finance' },
     ],
     [UserRole.Admin]: [
       ...commonLinks,
       { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
       ...managementLinks,
+      ...analysisLinks,
       { to: '/finance', icon: BanknotesIcon, text: 'Finance' },
       { to: '/structure', icon: ShareIcon, text: 'Entity Structure' },
     ],
     [UserRole.Chef]: [
       { to: '/dashboard', icon: ClipboardDocumentListIcon, text: 'KOT View' },
       { to: '/recipes', icon: BookOpenIcon, text: 'Recipes' },
+      ...analysisLinks,
       { to: '/dashboard?request-ingredients=true', icon: PlusIcon, text: 'Request Ingredients' },
     ],
     [UserRole.StoreManager]: [
