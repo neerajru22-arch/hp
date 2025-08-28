@@ -22,6 +22,15 @@ const AppLayout: React.FC = () => {
   return (
     <div className="flex h-screen bg-slate-100 text-slate-800">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setSidebarOpen} />
+      
+      {/* Overlay for mobile when sidebar is open */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-4 sm:p-6 md:p-8">

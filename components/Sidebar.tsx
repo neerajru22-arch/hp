@@ -72,14 +72,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   `;
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={() => setIsOpen(false)}
-        ></div>
-      )}
       <div className={sidebarClasses}>
         <div className="flex items-center justify-center h-20 border-b border-slate-200 flex-shrink-0">
           <h1 className="text-2xl font-bold text-primary">Halfplate</h1>
@@ -90,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               key={link.to} 
               to={link.to} 
               className={({ isActive }) => `${navLinkClasses} ${isActive ? activeClass : inactiveClass}`}
-              onClick={() => setIsOpen(false)} // Close sidebar on link click
+              onClick={() => setIsOpen(false)} // Close sidebar on link click on mobile
             >
               <link.icon className="w-6 h-6 mr-3" />
               {link.text}
@@ -108,7 +100,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           </a>
         </div>
       </div>
-    </>
   );
 };
 
