@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { Outlet, Kitchen, Floor, Table, User, UserRole } from '../types';
 import Button from '../components/Button';
-import { PlusIcon, PencilIcon, TrashIcon, IdentificationIcon, ChevronRightIcon } from '../components/icons/Icons';
+import { PlusIcon, PencilIcon, TrashIcon, IdentificationIcon, ChevronRightIcon, EllipsisVerticalIcon } from '../components/icons/Icons';
 import Modal from '../components/Modal';
 import TableComponent, { Column } from '../components/Table';
 
@@ -222,16 +223,61 @@ const AddEditUserModal: React.FC<{
 
 // --- Child Components for Structure Page ---
 
-const ActionButtons: React.FC<{ onEdit: React.MouseEventHandler; onDelete: React.MouseEventHandler }> = ({ onEdit, onDelete }) => (
-    <div className="flex items-center space-x-1 flex-shrink-0">
-        <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
-            <PencilIcon className="w-5 h-5" />
-        </button>
-        <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors">
-            <TrashIcon className="w-5 h-5" />
-        </button>
-    </div>
-);
+const ActionButtons: React.FC<{ onEdit: React.MouseEventHandler; onDelete: React.MouseEventHandler }> = ({ onEdit, onDelete }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleEditClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+        onEdit(e);
+        setMenuOpen(false);
+    };
+
+    const handleDeleteClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+        onDelete(e);
+        setMenuOpen(false);
+    };
+
+    return (
+        <div className="flex items-center space-x-1 flex-shrink-0">
+            {/* Desktop View: Always visible icons */}
+            <div className="hidden sm:flex items-center space-x-1">
+                <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                    <PencilIcon className="w-5 h-5" />
+                </button>
+                <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors">
+                    <TrashIcon className="w-5 h-5" />
+                </button>
+            </div>
+            {/* Mobile View: Kebab menu */}
+            <div className="relative sm:hidden" ref={menuRef}>
+                <button onClick={() => setMenuOpen(prev => !prev)} className="p-2 rounded-full text-slate-500 hover:bg-slate-200">
+                    <EllipsisVerticalIcon className="w-5 h-5" />
+                </button>
+                {menuOpen && (
+                    <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-slate-200 z-10">
+                        <button onClick={handleEditClick} className="w-full text-left flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                            <PencilIcon className="w-4 h-4 mr-2" /> Edit
+                        </button>
+                        <button onClick={handleDeleteClick} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                            <TrashIcon className="w-4 h-4 mr-2" /> Delete
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 
 const TableNode: React.FC<{ table: Table; onEdit: () => void; onDelete: () => void; }> = ({ table, onEdit, onDelete }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 pl-2 pr-1 rounded hover:bg-slate-100">
