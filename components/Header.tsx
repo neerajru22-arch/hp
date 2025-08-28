@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDownIcon, BellIcon, UserCircleIcon, ArrowRightOnRectangleIcon, ArrowsRightLeftIcon, Bars3Icon } from './icons/Icons';
+import { useLocation } from 'react-router-dom';
+import { ChevronDownIcon, BellIcon, ArrowsRightLeftIcon, Bars3Icon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
-import { Outlet, InventoryItem } from '../types';
+import { InventoryItem } from '../types';
 import { api } from '../services/api';
 
 const OutletSelector: React.FC = () => {
@@ -57,12 +57,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const { user, outlets, logout } = useAuth();
+  const { user, outlets } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
 
@@ -82,17 +79,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     const title = path.replace('-', ' ');
     return title.charAt(0).toUpperCase() + title.slice(1);
   };
-  
-  const handleLogout = () => {
-      logout();
-      navigate('/login');
-  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setNotificationsOpen(false);
       }
@@ -152,32 +141,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               </div>
               <div className="p-2 bg-slate-50 rounded-b-lg">
                 <a href="#/inventory" onClick={() => setNotificationsOpen(false)} className="block text-center text-sm font-medium text-primary hover:underline">View All Inventory</a>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="relative" ref={dropdownRef}>
-          <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center space-x-2 text-left">
-            <UserCircleIcon className="w-10 h-10 text-slate-400"/>
-            <div>
-              <p className="font-semibold text-sm text-secondary">{user.name}</p>
-              <p className="text-xs text-slate-600">{user.role}</p>
-            </div>
-            <ChevronDownIcon className={`w-5 h-5 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
-              <div className="p-4 border-b">
-                <p className="font-semibold text-secondary">{user.name}</p>
-                <p className="text-sm text-slate-600">{user.email}</p>
-              </div>
-              <div className="p-2 border-t">
-                 <a href="#/profile" className="flex w-full items-center px-2 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md">
-                   <UserCircleIcon className="w-5 h-5 mr-2" /> My Profile
-                 </a>
-                 <button onClick={handleLogout} className="flex w-full items-center px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
-                   <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" /> Logout
-                 </button>
               </div>
             </div>
           )}

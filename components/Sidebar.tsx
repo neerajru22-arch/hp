@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon } from './icons/Icons';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { ChartBarIcon, DocumentTextIcon, ArchiveBoxIcon, BookOpenIcon, BanknotesIcon, Cog6ToothIcon, QuestionMarkCircleIcon, ShareIcon, ClipboardDocumentListIcon, UserGroupIcon, BuildingStorefrontIcon, TableCellsIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from './icons/Icons';
 import { useAuth } from '../auth/AuthContext';
 import { UserRole } from '../types';
 
@@ -11,7 +11,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   const navLinkClasses = 'flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors';
   const activeClass = 'bg-primary-50 text-primary-700';
@@ -70,6 +71,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     md:static md:translate-x-0
     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
   `;
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    setIsOpen(false);
+  }
 
   return (
       <div className={sidebarClasses}>
@@ -89,15 +96,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             </NavLink>
           ))}
         </nav>
-        <div className="px-4 py-6 border-t border-slate-200 space-y-2">
-          <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
-              <Cog6ToothIcon className="w-6 h-6 mr-3" />
-              Settings
+        <div className="px-4 py-4 border-t border-slate-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <UserCircleIcon className="w-10 h-10 text-slate-400 flex-shrink-0"/>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm text-secondary truncate" title={user?.name}>{user?.name}</p>
+              <p className="text-xs text-slate-600 truncate" title={user?.role}>{user?.role}</p>
+            </div>
+          </div>
+          <a href="#/profile" onClick={() => setIsOpen(false)} className={`${navLinkClasses} ${inactiveClass} mb-2 w-full text-left`}>
+            <UserCircleIcon className="w-6 h-6 mr-3" />
+            My Profile
           </a>
-          <a href="#" className={`${navLinkClasses} ${inactiveClass}`}>
-              <QuestionMarkCircleIcon className="w-6 h-6 mr-3" />
-              Support
-          </a>
+          <button onClick={handleLogout} className={`w-full ${navLinkClasses} !text-red-600 hover:!bg-red-50`}>
+            <ArrowRightOnRectangleIcon className="w-6 h-6 mr-3" />
+            Logout
+          </button>
         </div>
       </div>
   );

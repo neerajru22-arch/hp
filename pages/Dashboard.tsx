@@ -44,9 +44,11 @@ const SalesDashboard: React.FC = () => {
         { header: 'Order ID', accessor: 'id' },
         { header: 'Vendor', accessor: 'vendor' },
         { header: 'Date', accessor: 'date' },
-        { header: 'Total', accessor: (item: Order) => `$${item.total.toFixed(2)}` },
+        { header: 'Total', accessor: (item: Order) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.total) },
         { header: 'Status', accessor: (item: Order) => getOrderStatusBadge(item.status) },
     ];
+
+    const formatToINR = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
     return (
         <div className="space-y-6">
@@ -86,11 +88,11 @@ const SalesDashboard: React.FC = () => {
                 <LineChart data={salesData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} tickFormatter={(value) => `$${value/1000}k`}/>
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12}} tickFormatter={(value) => `${formatToINR(value/1000)}k`}/>
                   <Tooltip 
                     cursor={{stroke: '#4338ca', strokeWidth: 1, strokeDasharray: '3 3'}} 
                     contentStyle={{borderRadius: '0.5rem', borderColor: '#e2e8f0'}}
-                    formatter={(value: number) => [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value), 'Sales']}
+                    formatter={(value: number) => [formatToINR(value), 'Sales']}
                   />
                   <Legend wrapperStyle={{fontSize: "14px"}}/>
                   <Line type="monotone" dataKey="sales" stroke="#4338ca" strokeWidth={2} dot={{r: 4, fill: '#4338ca'}} activeDot={{ r: 6 }} name="Sales"/>
@@ -256,6 +258,8 @@ const TableManagementModal: React.FC<{
     const elapsedTime = useElapsedTime(table.seatedAt);
     const newItemsTotal = newlyAddedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
+    const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+
     return (
         <Modal isOpen={true} onClose={onClose} title={`${table.name} - Management`}>
             {table.status === TableStatus.Available ? (
@@ -286,7 +290,7 @@ const TableManagementModal: React.FC<{
                 <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 max-h-[70vh]">
                         {/* Left Side: Order Summary */}
-                        <div className="p-6 border-r border-slate-200 flex flex-col">
+                        <div className="p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
                             <div className="flex justify-between items-baseline mb-4">
                                 <h3 className="font-semibold text-lg text-secondary">Current Order</h3>
                                 <span className="font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded">{elapsedTime}</span>
@@ -301,7 +305,7 @@ const TableManagementModal: React.FC<{
                                                     <p className="font-medium text-slate-800">{item.name}</p>
                                                     <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
                                                 </div>
-                                                <p className="font-semibold text-secondary">${(item.price * item.quantity).toFixed(2)}</p>
+                                                <p className="font-semibold text-secondary">{formatCurrency(item.price * item.quantity)}</p>
                                             </li>
                                         ))}
                                     </ul>
@@ -312,7 +316,7 @@ const TableManagementModal: React.FC<{
                                                 {newlyAddedItems.map(item => (
                                                     <li key={item.id} className="py-1 flex justify-between">
                                                         <span>{item.name} (x{item.quantity})</span>
-                                                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                                                        <span>{formatCurrency(item.price * item.quantity)}</span>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -323,7 +327,7 @@ const TableManagementModal: React.FC<{
                             </div>
                             <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-lg text-primary">
                                 <span>Total</span>
-                                <span>${((orderResult?.total || 0) + newItemsTotal).toFixed(2)}</span>
+                                <span>{formatCurrency((orderResult?.total || 0) + newItemsTotal)}</span>
                             </div>
                         </div>
                         {/* Right Side: Menu */}
@@ -336,7 +340,7 @@ const TableManagementModal: React.FC<{
                                         <li key={item.id} className="py-2 flex justify-between items-center">
                                             <div>
                                                 <p className="font-medium text-slate-800">{item.name}</p>
-                                                <p className="text-sm text-slate-500">${item.price.toFixed(2)}</p>
+                                                <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
                                             </div>
                                             <Button size="sm" onClick={() => handleAddItem(item)}>Add</Button>
                                         </li>
@@ -392,11 +396,13 @@ const TakeawayModal: React.FC<{
     };
     
     const newItemsTotal = newlyAddedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+
 
     return (
         <Modal isOpen={true} onClose={onClose} title="New Takeaway Order">
             <div className="grid grid-cols-1 md:grid-cols-2 max-h-[70vh]">
-                <div className="p-6 border-r border-slate-200 flex flex-col">
+                <div className="p-6 md:border-r md:border-slate-200 border-b border-slate-200 md:border-b-0 flex flex-col">
                     <h3 className="font-semibold text-lg text-secondary mb-4">Order Items</h3>
                     <div className="flex-grow overflow-y-auto">
                         {newlyAddedItems.length > 0 ? (
@@ -404,7 +410,7 @@ const TakeawayModal: React.FC<{
                                 {newlyAddedItems.map(item => (
                                     <li key={item.id} className="py-2 flex justify-between">
                                         <span>{item.name} (x{item.quantity})</span>
-                                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                                        <span>{formatCurrency(item.price * item.quantity)}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -412,7 +418,7 @@ const TakeawayModal: React.FC<{
                     </div>
                     <div className="mt-4 pt-4 border-t-2 border-dashed flex justify-between font-bold text-lg text-primary">
                         <span>Total</span>
-                        <span>${newItemsTotal.toFixed(2)}</span>
+                        <span>{formatCurrency(newItemsTotal)}</span>
                     </div>
                 </div>
                 <div className="p-6 flex flex-col">
@@ -424,7 +430,7 @@ const TakeawayModal: React.FC<{
                                 <li key={item.id} className="py-2 flex justify-between items-center">
                                     <div>
                                         <p className="font-medium text-slate-800">{item.name}</p>
-                                        <p className="text-sm text-slate-500">${item.price.toFixed(2)}</p>
+                                        <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
                                     </div>
                                     <Button size="sm" onClick={() => handleAddItem(item)}>Add</Button>
                                 </li>
